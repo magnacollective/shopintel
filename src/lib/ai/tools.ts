@@ -33,13 +33,16 @@ function formatPrice(amount: string, currency: string) {
 const liquid = new Liquid({ strictFilters: false, strictVariables: false });
 
 // Register Shopify-specific filters that LiquidJS doesn't have
+// Shopify prices are in cents — divide by 100 for display
 liquid.registerFilter("money", (v) => {
   const n = typeof v === "string" ? parseFloat(v) : Number(v);
-  return `$${isNaN(n) ? "0.00" : n.toFixed(2)}`;
+  const dollars = n >= 100 ? n / 100 : n; // handle both cents and dollar formats
+  return `$${isNaN(dollars) ? "0.00" : dollars.toFixed(2)}`;
 });
 liquid.registerFilter("money_with_currency", (v) => {
   const n = typeof v === "string" ? parseFloat(v) : Number(v);
-  return `$${isNaN(n) ? "0.00" : n.toFixed(2)} USD`;
+  const dollars = n >= 100 ? n / 100 : n;
+  return `$${isNaN(dollars) ? "0.00" : dollars.toFixed(2)} USD`;
 });
 liquid.registerFilter("img_url", (v) => typeof v === "string" ? v : "");
 liquid.registerFilter("image_url", (v) => typeof v === "string" ? v : "");
@@ -293,28 +296,40 @@ export const shopifyTools = {
         .describe("The complete Shopify Liquid section. Must include HTML, a {% style %} block with all CSS, and a {% schema %} block with settings and presets. This is the ONLY field for code."),
     }),
     execute: async (params) => {
-      const products = await getProducts({ limit: 50 });
-      const previewProducts = products.map((p) => ({
+      // Pull real product images from the store for authentic-looking previews
+      const storeProducts = await getProducts({ limit: 8 });
+      const storeImages = storeProducts
+        .map((p) => p.featuredImage?.url)
+        .filter((url): url is string => !!url);
+
+      // Use curated placeholder data with real store images for clean previews
+      const placeholderProducts = [
+        { title: "Luminous Glow Serum", vendor: "HAUS LABS", price: "48.00", compare: "62.00", type: "Skincare", handle: "luminous-glow-serum" },
+        { title: "Velvet Matte Lipstick", vendor: "WESTMAN ATELIER", price: "38.00", compare: null, type: "Makeup", handle: "velvet-matte-lipstick" },
+        { title: "Hydra-Plump Moisturizer", vendor: "TATCHA", price: "65.00", compare: "78.00", type: "Skincare", handle: "hydra-plump-moisturizer" },
+        { title: "Rose Gold Highlighter", vendor: "RMS BEAUTY", price: "42.00", compare: null, type: "Makeup", handle: "rose-gold-highlighter" },
+        { title: "Overnight Recovery Oil", vendor: "DRUNK ELEPHANT", price: "72.00", compare: "88.00", type: "Skincare", handle: "overnight-recovery-oil" },
+        { title: "Clean Silk Foundation", vendor: "ILIA", price: "54.00", compare: null, type: "Makeup", handle: "clean-silk-foundation" },
+        { title: "Vitamin C Brightening Drops", vendor: "BIOSSANCE", price: "39.00", compare: null, type: "Skincare", handle: "vitamin-c-drops" },
+        { title: "Crystal Clear Setting Spray", vendor: "KOSAS", price: "28.00", compare: "34.00", type: "Makeup", handle: "crystal-clear-spray" },
+      ];
+
+      const previewProducts = placeholderProducts.map((p, i) => ({
         title: p.title,
-        price: p.priceRangeV2.minVariantPrice.amount,
-        compare_at_price: p.priceRangeV2.maxVariantPrice.amount !== p.priceRangeV2.minVariantPrice.amount ? p.priceRangeV2.maxVariantPrice.amount : null,
-        currency: p.priceRangeV2.minVariantPrice.currencyCode,
-        image: p.featuredImage?.url || "",
-        image_alt: p.featuredImage?.altText || p.title,
-        images: p.images.nodes.map((img) => img.url),
+        price: p.price,
+        compare_at_price: p.compare,
+        currency: "USD",
+        image: storeImages[i] || storeImages[0] || "https://placehold.co/400x533/f5f5f0/999?text=Product",
+        image_alt: p.title,
+        images: [storeImages[i] || storeImages[0] || ""],
         vendor: p.vendor,
         handle: p.handle,
-        description: p.description,
-        product_type: p.productType,
-        tags: p.tags,
-        available: p.totalInventory > 0,
-        total_inventory: p.totalInventory,
-        variants: p.variants.nodes.map((v) => ({
-          title: v.title,
-          price: v.price,
-          sku: v.sku,
-          available: (v.inventoryQuantity ?? 0) > 0,
-        })),
+        description: `Premium ${p.type.toLowerCase()} for your daily routine.`,
+        product_type: p.type,
+        tags: [p.type, "Clean Beauty", "Bestseller"],
+        available: true,
+        total_inventory: 50,
+        variants: [{ title: "Default", price: p.price, sku: null, available: true }],
       }));
 
       // Render preview HTML using the real Liquid engine with product data
