@@ -119,8 +119,8 @@ export const shopifyTools = {
       "Generate a premium Shopify Liquid section with live preview. Creates production-grade storefront code with a luxury clean beauty aesthetic (Kosas-inspired: Founders Grotesk typography, black/white palette, dusty rose #D33167 accent, refined minimalism). Use this when the user asks to create a section, page, component, or any storefront element.",
     inputSchema: z.object({
       componentType: z
-        .enum(["featured-products", "hero-banner", "product-grid", "newsletter", "testimonials", "custom"])
-        .describe("Type of section to generate"),
+        .enum(["featured-products", "hero-banner", "product-grid", "newsletter", "testimonials"])
+        .describe("Type of section template to generate. Only use these for standard sections. For custom/unique requests, write the Liquid code yourself instead of using this tool."),
       description: z
         .string()
         .optional()
