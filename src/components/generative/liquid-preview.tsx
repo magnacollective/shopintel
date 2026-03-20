@@ -285,9 +285,13 @@ function buildPreviewHtml(componentType: string, products: PreviewProduct[]): st
     default:
       return wrapHtml(`
   <section style="padding:72px 32px;background:#fff">
-    <div style="max-width:720px;margin:0 auto">
-      <h2 style="font-family:'Roboto Condensed',sans-serif;font-size:28px;font-weight:700;margin:0 0 24px;color:#000;letter-spacing:-0.01em">Custom Section</h2>
-      <p style="color:rgba(0,0,0,0.55);line-height:1.7">Preview not available for custom sections. Check the code tab for the Liquid template.</p>
+    <div style="max-width:1000px;margin:0 auto">
+      <span style="display:block;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.14em;color:#D33167;text-align:center;margin-bottom:10px">Custom Section</span>
+      <h2 style="font-family:'Roboto Condensed',sans-serif;font-size:36px;font-weight:700;text-align:center;margin:0 0 8px;color:#000;letter-spacing:-0.01em;line-height:1.05">Your Collection</h2>
+      <p style="text-align:center;color:rgba(0,0,0,0.55);margin:0 0 48px;font-size:15px;font-weight:400">Preview with your store products</p>
+      <div style="display:grid;grid-template-columns:repeat(${Math.min(products.length, 4)},1fr);gap:28px">
+        ${productCards}
+      </div>
     </div>
   </section>`);
   }
