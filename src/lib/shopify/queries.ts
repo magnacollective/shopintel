@@ -21,7 +21,14 @@ const PRODUCTS_QUERY = `
           url
           altText
         }
-        variants(first: 5) {
+        images(first: 10) {
+          nodes {
+            url
+            altText
+          }
+        }
+        tags
+        variants(first: 10) {
           nodes {
             id
             title

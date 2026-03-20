@@ -28,6 +28,10 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   featuredImage: ProductImage | null;
+  images: {
+    nodes: ProductImage[];
+  };
+  tags: string[];
   variants: {
     nodes: ProductVariant[];
   };

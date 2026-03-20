@@ -10,12 +10,20 @@ interface PreviewProduct {
   currency: string;
   image: string;
   image_alt: string;
+  images: string[];
   vendor: string;
   handle: string;
   description: string;
   product_type: string;
+  tags: string[];
   available: boolean;
-  variants_count: number;
+  total_inventory: number;
+  variants: {
+    title: string;
+    price: string;
+    sku: string | null;
+    available: boolean;
+  }[];
 }
 
 function formatPrice(amount: string, currency: string) {
@@ -58,6 +66,7 @@ async function renderLiquidPreview(liquidCode: string, products: PreviewProduct[
   const liquidProducts = products.map((p) => {
     const priceCents = Math.round(parseFloat(p.price) * 100);
     const comparePrice = p.compare_at_price ? Math.round(parseFloat(p.compare_at_price) * 100) : null;
+    const allImages = p.images.length > 0 ? p.images : (p.image ? [p.image] : []);
     return {
       title: p.title,
       vendor: p.vendor,
@@ -71,22 +80,25 @@ async function renderLiquidPreview(liquidCode: string, products: PreviewProduct[
       price_max: priceCents,
       compare_at_price: comparePrice,
       compare_at_price_min: comparePrice,
+      compare_at_price_max: comparePrice,
       available: p.available,
       featured_image: p.image,
       featured_media: { preview_image: { src: p.image } },
-      images: [p.image],
-      media: [{ preview_image: { src: p.image } }],
-      image: { src: p.image, alt: p.image_alt },
-      tags: [],
+      images: allImages,
+      media: allImages.map((img) => ({ preview_image: { src: img } })),
+      image: { src: p.image, alt: p.image_alt, width: 800, height: 1067 },
+      tags: p.tags,
       options: [],
-      variants: Array.from({ length: p.variants_count || 1 }, (_, i) => ({
-        price: priceCents,
+      variants: p.variants.map((v) => ({
+        price: Math.round(parseFloat(v.price) * 100),
         compare_at_price: comparePrice,
-        title: i === 0 ? "Default" : `Variant ${i + 1}`,
-        available: p.available,
+        title: v.title,
+        sku: v.sku,
+        available: v.available,
         image: { src: p.image },
       })),
-      has_only_default_variant: p.variants_count <= 1,
+      has_only_default_variant: p.variants.length <= 1,
+      total_inventory: p.total_inventory,
     };
   });
 
@@ -281,7 +293,7 @@ export const shopifyTools = {
         .describe("The complete Shopify Liquid section. Must include HTML, a {% style %} block with all CSS, and a {% schema %} block with settings and presets. This is the ONLY field for code."),
     }),
     execute: async (params) => {
-      const products = await getProducts({ limit: 8 });
+      const products = await getProducts({ limit: 50 });
       const previewProducts = products.map((p) => ({
         title: p.title,
         price: p.priceRangeV2.minVariantPrice.amount,
@@ -289,12 +301,20 @@ export const shopifyTools = {
         currency: p.priceRangeV2.minVariantPrice.currencyCode,
         image: p.featuredImage?.url || "",
         image_alt: p.featuredImage?.altText || p.title,
+        images: p.images.nodes.map((img) => img.url),
         vendor: p.vendor,
         handle: p.handle,
         description: p.description,
         product_type: p.productType,
+        tags: p.tags,
         available: p.totalInventory > 0,
-        variants_count: p.variants.nodes.length,
+        total_inventory: p.totalInventory,
+        variants: p.variants.nodes.map((v) => ({
+          title: v.title,
+          price: v.price,
+          sku: v.sku,
+          available: (v.inventoryQuantity ?? 0) > 0,
+        })),
       }));
 
       // Render preview HTML using the real Liquid engine with product data
