@@ -114,45 +114,33 @@ async function renderLiquidPreview(liquidCode: string, products: PreviewProduct[
     all_products_count: liquidProducts.length,
   };
 
+  // Section settings act as schema defaults — the AI defines the schema,
+  // and these are the values that populate the preview
   const context = {
     collection: collectionObj,
     collections: { all: collectionObj, frontpage: collectionObj },
     section: {
       id: "preview-section",
       settings: {
-        title: "Featured Collection",
-        heading: "Featured Collection",
-        subtitle: "Discover our curated selection",
-        description: "Discover our curated selection",
-        subheading: "Discover our curated selection",
-        button_text: "Shop Now",
-        button_label: "Shop Now",
-        button_link: "#",
-        button_url: "#",
-        cta_text: "Shop Now",
-        cta_link: "#",
         collection: collectionObj,
         columns: 4,
         columns_desktop: 4,
         columns_mobile: 2,
         rows: 1,
-        products_to_show: 8,
+        products_to_show: liquidProducts.length,
         show_vendor: true,
         show_price: true,
         show_image: true,
         show_secondary_image: false,
         enable_quick_add: true,
         image_ratio: "portrait",
-        bg_color: "#ffffff",
-        text_color: "#000000",
-        accent_color: "#D33167",
         padding_top: 80,
         padding_bottom: 80,
       },
     },
     products: liquidProducts,
     shop: {
-      name: "ShopIntel Store",
+      name: products[0]?.vendor || "Store",
       url: "#",
       currency: products[0]?.currency || "USD",
       money_format: "${{amount}}",
@@ -299,35 +287,29 @@ export const shopifyTools = {
       // Pull real products from the store
       const storeProducts = await getProducts({ limit: 8 });
 
-      // Use real store data — sanitize so preview always looks clean
-      const previewProducts = storeProducts.map((p) => {
-        const price = parseFloat(p.priceRangeV2.minVariantPrice.amount);
-        const maxPrice = parseFloat(p.priceRangeV2.maxVariantPrice.amount);
-        const hasCompare = maxPrice > price;
-
-        return {
-          title: p.title,
-          price: price > 0 ? p.priceRangeV2.minVariantPrice.amount : "29.00",
-          compare_at_price: hasCompare ? p.priceRangeV2.maxVariantPrice.amount : null,
-          currency: p.priceRangeV2.minVariantPrice.currencyCode || "USD",
-          image: p.featuredImage?.url || "https://placehold.co/400x533/f5f5f0/999?text=Product",
-          image_alt: p.featuredImage?.altText || p.title,
-          images: p.images.nodes.length > 0 ? p.images.nodes.map((img) => img.url) : [p.featuredImage?.url || ""],
-          vendor: p.vendor || "ShopIntel",
-          handle: p.handle,
-          description: p.description || "",
-          product_type: p.productType || "",
-          tags: p.tags || [],
-          available: true, // always show as available in preview
-          total_inventory: Math.max(p.totalInventory, 10), // never show low stock in preview
-          variants: p.variants.nodes.map((v) => ({
-            title: v.title,
-            price: parseFloat(v.price) > 0 ? v.price : "29.00",
-            sku: v.sku,
-            available: true,
-          })),
-        };
-      });
+      // Use real store data directly — no hardcoded fallbacks
+      const previewProducts = storeProducts.map((p) => ({
+        title: p.title,
+        price: p.priceRangeV2.minVariantPrice.amount,
+        compare_at_price: parseFloat(p.priceRangeV2.maxVariantPrice.amount) > parseFloat(p.priceRangeV2.minVariantPrice.amount) ? p.priceRangeV2.maxVariantPrice.amount : null,
+        currency: p.priceRangeV2.minVariantPrice.currencyCode,
+        image: p.featuredImage?.url || "",
+        image_alt: p.featuredImage?.altText || p.title,
+        images: p.images.nodes.map((img) => img.url),
+        vendor: p.vendor,
+        handle: p.handle,
+        description: p.description,
+        product_type: p.productType,
+        tags: p.tags,
+        available: p.totalInventory > 0,
+        total_inventory: p.totalInventory,
+        variants: p.variants.nodes.map((v) => ({
+          title: v.title,
+          price: v.price,
+          sku: v.sku,
+          available: (v.inventoryQuantity ?? 0) > 0,
+        })),
+      }));
 
       // Render preview HTML using the real Liquid engine with product data
       const previewHtml = await renderLiquidPreview(params.liquidCode, previewProducts);
