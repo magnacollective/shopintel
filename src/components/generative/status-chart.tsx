@@ -49,12 +49,15 @@ export function StatusChart({ data, title }: StatusChartProps) {
               <Tooltip
                 contentStyle={{
                   borderRadius: "8px",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  border: "1px solid rgba(255,255,255,0.15)",
                   fontSize: "12px",
                   backgroundColor: "#111",
                   color: "#fff",
+                  padding: "8px 12px",
                 }}
+                wrapperStyle={{ outline: "none" }}
                 itemStyle={{ color: "#fff" }}
+                labelStyle={{ color: "#fff", fontWeight: 600 }}
                 formatter={(value, name) => [`${Number(value)} orders`, name]}
               />
               <Legend

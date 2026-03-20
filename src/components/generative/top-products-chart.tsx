@@ -60,11 +60,21 @@ export function TopProductsChart({ data, currency }: TopProductsChartProps) {
                   name === "revenue" ? formatCurrency(Number(value)) : value,
                   name === "revenue" ? "Revenue" : "Units Sold",
                 ]}
+                labelFormatter={(label) => {
+                  const item = data.find(
+                    (d) => d.title === label || d.title.startsWith(String(label).replace("...", ""))
+                  );
+                  return item?.title || label;
+                }}
                 contentStyle={{
                   borderRadius: "8px",
-                  border: "1px solid var(--border)",
+                  border: "1px solid rgba(255,255,255,0.1)",
                   fontSize: "12px",
+                  backgroundColor: "#111",
+                  color: "#fff",
                 }}
+                labelStyle={{ color: "#fff", fontWeight: 600, marginBottom: 4 }}
+                itemStyle={{ color: "#ccc" }}
               />
               <Bar dataKey="revenue" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
             </BarChart>
