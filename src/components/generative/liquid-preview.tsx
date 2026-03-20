@@ -186,19 +186,25 @@ function formatPrice(amount: string, currency: string) {
 function buildPreviewFromCode(code: string, products: PreviewProduct[]): string {
   let html = code;
 
-  // Extract CSS from {% style %} blocks
-  const styleMatch = html.match(/\{%[-\s]*style\s*%\}([\s\S]*?)\{%[-\s]*endstyle\s*%\}/i);
-  const extractedCss = styleMatch ? styleMatch[1] : "";
+  // 1. Extract CSS from {% style %} blocks AND regular <style> tags
+  const allCss: string[] = [];
+  // Liquid {% style %} blocks
+  html = html.replace(/\{%[-\s]*style\s*%\}([\s\S]*?)\{%[-\s]*endstyle\s*%\}/gi, (_m, css) => {
+    allCss.push(css);
+    return "";
+  });
+  // Regular <style> tags
+  html = html.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (_m, css) => {
+    allCss.push(css);
+    return "";
+  });
 
-  // Remove {% schema %} block entirely (JSON config, not renderable)
+  // 2. Remove {% schema %} block (JSON config, not renderable)
   html = html.replace(/\{%[-\s]*schema\s*%\}[\s\S]*?\{%[-\s]*endschema\s*%\}/gi, "");
 
-  // Remove {% style %}...{% endstyle %} blocks (we'll inject CSS separately)
-  html = html.replace(/\{%[-\s]*style\s*%\}[\s\S]*?\{%[-\s]*endstyle\s*%\}/gi, "");
-
-  // Replace ALL Liquid for-loops with unrolled product data
-  // Uses a greedy approach to handle nested tags inside loop bodies
-  const forLoopRegex = /\{%[-\s]*for\s+(\w+)\s+in\s+[\w.]+\s*(?:limit:\s*\d+\s*)?%\}([\s\S]*?)\{%[-\s]*endfor\s*%\}/gi;
+  // 3. Unroll ALL for-loops with product data
+  // Very flexible: handles any collection path, limit params, whitespace variations
+  const forLoopRegex = /\{%[-\s]*for\s+(\w+)\s+in\s+[^%]+%\}([\s\S]*?)\{%[-\s]*endfor\s*%\}/gi;
   let loopMatch;
   while ((loopMatch = forLoopRegex.exec(html)) !== null) {
     if (products.length === 0) break;
@@ -206,46 +212,41 @@ function buildPreviewFromCode(code: string, products: PreviewProduct[]): string 
     const loopBody = loopMatch[2];
     const unrolled = products.map((p) => {
       let block = loopBody;
-      // Replace product image references (many Liquid patterns)
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.featured_image[^}]*\\}\\}`, "g"), p.image || "");
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.images\\s*\\[\\s*0\\s*\\][^}]*\\}\\}`, "g"), p.image || "");
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.media\\s*\\[\\s*0\\s*\\][^}]*\\}\\}`, "g"), p.image || "");
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.image[^}]*\\}\\}`, "g"), p.image || "");
-      // Replace product fields
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.title\\s*(?:\\|[^}]*)?\\}\\}`, "g"), p.title);
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.vendor\\s*(?:\\|[^}]*)?\\}\\}`, "g"), p.vendor);
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.handle\\s*(?:\\|[^}]*)?\\}\\}`, "g"), p.handle);
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.price[^}]*\\}\\}`, "g"), formatPrice(p.price, p.currency));
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.url\\s*(?:\\|[^}]*)?\\}\\}`, "g"), `#${p.handle}`);
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.description[^}]*\\}\\}`, "g"), "");
-      // Strip inner conditionals ({% if product.available %} etc.)
-      block = block.replace(/\{%[-\s]*(?:if|elsif|unless|else|endif|endunless)[^%]*%\}/gi, "");
+      // Image — catch any variant: featured_image, images[0], media[0], image, etc.
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*(?:image|media|img)[^}]*\\}\\}`, "gi"), p.image || "");
+      // Price — catch any variant with | money, | money_with_currency, etc.
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*price[^}]*\\}\\}`, "gi"), formatPrice(p.price, p.currency));
+      // Title
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.title[^}]*\\}\\}`, "gi"), p.title);
+      // Vendor
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.vendor[^}]*\\}\\}`, "gi"), p.vendor);
+      // Handle
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.handle[^}]*\\}\\}`, "gi"), p.handle);
+      // URL
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.url[^}]*\\}\\}`, "gi"), `#${p.handle}`);
+      // Any remaining {{ product.* }} — blank them out
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*\\}\\}`, "gi"), "");
+      // Strip inner Liquid tags (conditionals, assigns, etc.)
+      block = block.replace(/\{%[^%]*%\}/g, "");
       return block;
     }).join("\n");
     html = html.replace(loopMatch[0], unrolled);
-    forLoopRegex.lastIndex = 0; // reset since we mutated html
+    forLoopRegex.lastIndex = 0;
   }
 
-  // Replace section.settings references with reasonable defaults
-  html = html.replace(/\{\{[-\s]*section\.settings\.(\w+)[-\s]*\}\}/g, (_match, setting: string) => {
-    const lower = setting.toLowerCase();
-    if (lower.includes("title") || lower.includes("heading")) return "Featured Collection";
-    if (lower.includes("subtitle") || lower.includes("description") || lower.includes("text")) return "Discover our curated selection";
-    if (lower.includes("button") || lower.includes("cta")) return "Shop Now";
-    if (lower.includes("url") || lower.includes("link")) return "#";
-    if (lower.includes("color")) return "";
+  // 4. Replace section.settings references with defaults
+  html = html.replace(/\{\{[-\s]*section\.settings\.(\w+)[^}]*\}\}/g, (_match, setting: string) => {
+    const s = setting.toLowerCase();
+    if (s.includes("title") || s.includes("heading")) return "Featured Collection";
+    if (s.includes("subtitle") || s.includes("description") || s.includes("text")) return "Discover our curated selection";
+    if (s.includes("button") || s.includes("cta")) return "Shop Now";
+    if (s.includes("url") || s.includes("link")) return "#";
     return "";
   });
 
-  // Remove remaining Liquid tags (conditionals, assigns, captures, etc.)
-  html = html.replace(/\{%[-\s]*(?:if|elsif|unless|endif|endunless|else|assign|capture|endcapture|comment|endcomment|render|include|liquid|break|continue|case|when|endcase|increment|decrement|raw|endraw|tablerow|endtablerow|paginate|endpaginate)[-\s][^%]*%\}/gi, "");
-  html = html.replace(/\{%[-\s]*(?:endif|endunless|else|endcapture|endcomment|endcase|endraw|endtablerow|endpaginate|endfor)[-\s]*%\}/gi, "");
-
-  // Remove any remaining {{ }} liquid output tags we didn't handle
-  html = html.replace(/\{\{[^}]*\}\}/g, "");
-
-  // Remove any remaining {% %} tags
+  // 5. Strip all remaining Liquid tags and output
   html = html.replace(/\{%[^%]*%\}/g, "");
+  html = html.replace(/\{\{[^}]*\}\}/g, "");
 
   return `<!DOCTYPE html>
 <html>
@@ -255,7 +256,7 @@ function buildPreviewFromCode(code: string, products: PreviewProduct[]): string 
   ${PREVIEW_FONTS}
   <style>
     ${PREVIEW_BASE_STYLES}
-    ${extractedCss}
+    ${allCss.join("\n")}
   </style>
 </head>
 <body>
