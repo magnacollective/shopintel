@@ -1,8 +1,6 @@
 import { z } from "zod";
 import { tool } from "ai";
 import { getProducts, getOrders, getCustomers, getAnalytics, getInventory, pushSectionToTheme, forecastTrends } from "../shopify/queries";
-import { generateLiquidCode } from "./liquid-templates";
-
 export const shopifyTools = {
   getProducts: tool({
     description:
@@ -120,7 +118,7 @@ export const shopifyTools = {
     inputSchema: z.object({
       componentType: z
         .enum(["featured-products", "hero-banner", "product-grid", "newsletter", "testimonials", "custom"])
-        .describe("Type of section. Use a specific type for standard sections. Use 'custom' when the user wants something unique — you MUST provide your own Liquid code via the 'code' parameter."),
+        .describe("Type of section for preview layout. Use the matching type when applicable, or 'custom' for unique requests. You must ALWAYS write your own Liquid code in the 'code' parameter regardless of type."),
       description: z
         .string()
         .optional()
@@ -128,8 +126,7 @@ export const shopifyTools = {
       code: z
         .string()
         .max(50000)
-        .optional()
-        .describe("Required when componentType is 'custom'. Provide the complete Liquid section code you wrote, including {% style %} and {% schema %} blocks. Must be production-grade, 200+ lines, with animations and responsive design."),
+        .describe("REQUIRED. You must ALWAYS provide your own complete, unique Liquid section code here. Include {% style %} and {% schema %} blocks. Must be production-grade, 200+ lines, with animations and responsive design. Never reuse or repeat code from previous generations."),
       productCount: z
         .number()
         .optional()
@@ -146,10 +143,7 @@ export const shopifyTools = {
         handle: p.handle,
       }));
 
-      // For custom type, use the AI-provided code; for standard types, use templates
-      const code = params.componentType === "custom" && params.code
-        ? params.code
-        : generateLiquidCode(params.componentType, params.description);
+      const code = params.code;
 
       return {
         code,
