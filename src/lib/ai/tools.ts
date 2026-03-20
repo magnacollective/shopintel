@@ -126,13 +126,18 @@ export const shopifyTools = {
       code: z
         .string()
         .max(50000)
-        .describe("REQUIRED. You must ALWAYS provide your own complete, unique Liquid section code here. Include {% style %} and {% schema %} blocks. Must be production-grade, 200+ lines, with animations and responsive design. Never reuse or repeat code from previous generations."),
+        .optional()
+        .describe("REQUIRED — you must ALWAYS provide this. Write your own complete, unique Liquid section code. Include {% style %} and {% schema %} blocks. Must be production-grade, 200+ lines, with animations and responsive design. Never reuse code from previous generations."),
       productCount: z
         .number()
         .optional()
         .describe("Number of products to include for preview (default 4)"),
     }),
     execute: async (params) => {
+      if (!params.code) {
+        return { error: "You must provide your own Liquid code in the 'code' parameter. Write 200+ lines of production-grade Liquid with {% style %} and {% schema %} blocks." };
+      }
+
       const products = await getProducts({ limit: params.productCount || 4 });
       const previewProducts = products.map((p) => ({
         title: p.title,

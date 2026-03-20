@@ -117,7 +117,7 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {isAdmin && ["Show revenue trends", "Low stock alerts", "Generate Liquid section"].map((prompt) => (
+              {isAdmin && ["Show revenue trends", "Low stock alerts", "Create a featured products Liquid section"].map((prompt) => (
                 <button
                   key={prompt}
                   onClick={() => handleSuggestion(prompt)}
