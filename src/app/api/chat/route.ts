@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       messages: modelMessages,
       tools: shopifyTools,
       maxOutputTokens: 16384,
-      temperature: 0.4,
+      temperature: 0.9,
       stopWhen: stepCountIs(3),
       providerOptions: {
         openai: {
