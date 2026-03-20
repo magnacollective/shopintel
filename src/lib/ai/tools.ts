@@ -127,7 +127,7 @@ export const shopifyTools = {
         .string()
         .max(50000)
         .optional()
-        .describe("REQUIRED — you must ALWAYS provide this. Write your own complete, unique Liquid section code. Include {% style %} and {% schema %} blocks. Must be production-grade, 200+ lines, with animations and responsive design. Never reuse code from previous generations."),
+        .describe("Your complete Liquid section code including {% style %} and {% schema %} blocks. Write production-grade Shopify Liquid with CSS, responsive design, and hover interactions. Keep it focused and efficient."),
       productCount: z
         .number()
         .optional()

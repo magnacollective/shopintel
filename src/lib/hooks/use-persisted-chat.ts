@@ -29,6 +29,9 @@ export function usePersistedChat() {
         savingRef.current = false;
       }
     },
+    onError: (error) => {
+      console.error("[chat] Error:", error);
+    },
   });
 
   // Load conversation list on mount and auto-restore the most recent one
@@ -144,10 +147,21 @@ export function usePersistedChat() {
   }, [activeConversationId]);
 
   const startNewChat = useCallback(async () => {
+    // Stop any in-flight request
+    chat.stop();
+    // Delete the active conversation from DB so it doesn't auto-restore
+    if (activeConversationId) {
+      try {
+        await fetch(`/api/conversations/${activeConversationId}`, { method: "DELETE" });
+        setConversations((prev) => prev.filter((c) => c.id !== activeConversationId));
+      } catch {
+        // silently fail
+      }
+    }
     setActiveConversationId(null);
     setInitialMessages([]);
     setChatKey((k) => k + 1);
-  }, []);
+  }, [chat, activeConversationId]);
 
   // Wrap sendMessage to auto-create conversation and save user message
   const sendMessage = useCallback(async (opts: { text: string }) => {

@@ -4,7 +4,7 @@ import { SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
 import { shopifyTools } from "@/lib/ai/tools";
 import { getSession } from "@/lib/auth";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const MAX_MESSAGES = 50;
 
@@ -40,16 +40,24 @@ export async function POST(req: Request) {
     return new Response("Too many messages", { status: 400 });
   }
 
-  const { messages } = body;
-  const modelMessages = await convertToModelMessages(messages);
+  try {
+    const { messages } = body;
+    const modelMessages = await convertToModelMessages(messages);
 
-  const result = streamText({
-    model: openai("gpt-5.4"),
-    system: SYSTEM_PROMPT,
-    messages: modelMessages,
-    tools: shopifyTools,
-    stopWhen: stepCountIs(5),
-  });
+    const result = streamText({
+      model: openai("gpt-5.4"),
+      system: SYSTEM_PROMPT,
+      messages: modelMessages,
+      tools: shopifyTools,
+      stopWhen: stepCountIs(5),
+    });
 
-  return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse();
+  } catch (error) {
+    console.error("[chat] Stream error:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to process chat request" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
 }
