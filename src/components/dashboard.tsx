@@ -67,7 +67,7 @@ interface DashboardProps {
 export function Dashboard({ analytics, products, orders, customers, inventoryData, user }: DashboardProps) {
   const isAdmin = user.role === "admin";
 
-  const { messages, sendMessage, status, chatKey } = usePersistedChat();
+  const { messages, sendMessage, status, chatKey, startNewChat } = usePersistedChat();
 
   const [input, setInput] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
@@ -213,12 +213,21 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
                     <span className="material-symbols-rounded text-indigo-400 text-lg">auto_awesome</span>
                     <span className="text-sm font-display font-medium text-zinc-300">AI Agent</span>
                   </div>
-                  <button
-                    onClick={() => setChatOpen(false)}
-                    className="text-zinc-600 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
-                  >
-                    <span className="material-symbols-rounded text-lg">keyboard_arrow_down</span>
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => { startNewChat(); setChatOpen(false); }}
+                      className="text-zinc-600 hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-white/5"
+                      title="Clear chat"
+                    >
+                      <span className="material-symbols-rounded text-lg">delete_sweep</span>
+                    </button>
+                    <button
+                      onClick={() => setChatOpen(false)}
+                      className="text-zinc-600 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
+                    >
+                      <span className="material-symbols-rounded text-lg">keyboard_arrow_down</span>
+                    </button>
+                  </div>
                 </div>
                 <div ref={chatScrollRef} className="overflow-y-auto px-4 pb-4 space-y-4">
                   {messages.map((message) => (
