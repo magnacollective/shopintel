@@ -119,16 +119,21 @@ export const shopifyTools = {
       "Generate a premium Shopify Liquid section with live preview. Creates production-grade storefront code with a luxury clean beauty aesthetic (Kosas-inspired: Founders Grotesk typography, black/white palette, dusty rose #D33167 accent, refined minimalism). Use this when the user asks to create a section, page, component, or any storefront element.",
     inputSchema: z.object({
       componentType: z
-        .enum(["featured-products", "hero-banner", "product-grid", "newsletter", "testimonials"])
-        .describe("Type of section template to generate. Only use these for standard sections. For custom/unique requests, write the Liquid code yourself instead of using this tool."),
+        .enum(["featured-products", "hero-banner", "product-grid", "newsletter", "testimonials", "custom"])
+        .describe("Type of section. Use a specific type for standard sections. Use 'custom' when the user wants something unique — you MUST provide your own Liquid code via the 'code' parameter."),
       description: z
         .string()
         .optional()
         .describe("Additional design details or customization for the component"),
+      code: z
+        .string()
+        .max(50000)
+        .optional()
+        .describe("Required when componentType is 'custom'. Provide the complete Liquid section code you wrote, including {% style %} and {% schema %} blocks. Must be production-grade, 200+ lines, with animations and responsive design."),
       productCount: z
         .number()
         .optional()
-        .describe("Number of products to include (default 4)"),
+        .describe("Number of products to include for preview (default 4)"),
     }),
     execute: async (params) => {
       const products = await getProducts({ limit: params.productCount || 4 });
@@ -141,7 +146,10 @@ export const shopifyTools = {
         handle: p.handle,
       }));
 
-      const code = generateLiquidCode(params.componentType, params.description);
+      // For custom type, use the AI-provided code; for standard types, use templates
+      const code = params.componentType === "custom" && params.code
+        ? params.code
+        : generateLiquidCode(params.componentType, params.description);
 
       return {
         code,
