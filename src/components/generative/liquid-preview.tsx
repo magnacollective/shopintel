@@ -1,20 +1,138 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+
+interface PreviewProduct {
+  title: string;
+  price: string;
+  currency: string;
+  image: string;
+  vendor: string;
+  handle: string;
+}
 
 interface LiquidPreviewProps {
   code: string;
   componentType: string;
-  previewProducts?: unknown[];
+  previewProducts?: PreviewProduct[];
   previewHtml?: string;
 }
 
-export function LiquidPreview({ code, componentType, previewProducts, previewHtml }: LiquidPreviewProps) {
+function formatPrice(amount: string, currency: string) {
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(parseFloat(amount));
+  } catch {
+    return `$${amount}`;
+  }
+}
+
+/**
+ * Build a simple product grid preview as a guaranteed fallback.
+ * This always produces visible output regardless of Liquid parsing.
+ */
+function buildFallbackGrid(products: PreviewProduct[]): string {
+  const cards = products.map((p) => `
+    <div style="break-inside:avoid">
+      ${p.image ? `<img src="${p.image}" alt="${p.title}" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#f5f5f0">` : `<div style="width:100%;aspect-ratio:3/4;background:#f5f5f0"></div>`}
+      <div style="padding:12px 0">
+        <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(0,0,0,0.5);margin:0 0 4px">${p.vendor}</p>
+        <h3 style="font-size:14px;font-weight:600;margin:0 0 6px;color:#000">${p.title}</h3>
+        <span style="font-size:14px;font-weight:600;color:#000">${formatPrice(p.price, p.currency)}</span>
+      </div>
+    </div>
+  `).join("");
+
+  return `
+    <section style="padding:60px 32px;background:#fff">
+      <div style="max-width:1100px;margin:0 auto">
+        <div style="display:grid;grid-template-columns:repeat(${Math.min(products.length, 4)},1fr);gap:24px">
+          ${cards}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+/**
+ * Parse Liquid code into renderable HTML by substituting product data.
+ * Returns the parsed HTML body content (CSS is extracted separately).
+ */
+function parseLiquidToHtml(code: string, products: PreviewProduct[]): { body: string; css: string } {
+  let html = code;
+  const allCss: string[] = [];
+
+  // Extract CSS from {% style %} and <style>
+  html = html.replace(/\{%[-\s]*style\s*%\}([\s\S]*?)\{%[-\s]*endstyle\s*%\}/gi, (_m, css) => { allCss.push(css); return ""; });
+  html = html.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (_m, css) => { allCss.push(css); return ""; });
+
+  // Remove schema
+  html = html.replace(/\{%[-\s]*schema\s*%\}[\s\S]*?\{%[-\s]*endschema\s*%\}/gi, "");
+
+  // Unroll for-loops
+  let safety = 0;
+  while (safety++ < 10) {
+    const match = html.match(/\{%[-\s]*for\s+(\w+)\s+in\s+[^%]+%\}([\s\S]*?)\{%[-\s]*endfor\s*%\}/i);
+    if (!match) break;
+    const v = match[1];
+    const body = match[2];
+    const expanded = products.map((p) => {
+      let b = body;
+      b = b.replace(new RegExp(`\\{\\{[-\\s]*${v}\\.[^}]*(?:image|media|img|photo|src)[^}]*\\}\\}`, "gi"), p.image || "");
+      b = b.replace(new RegExp(`\\{\\{[-\\s]*${v}\\.[^}]*price[^}]*\\}\\}`, "gi"), formatPrice(p.price, p.currency));
+      b = b.replace(new RegExp(`\\{\\{[-\\s]*${v}\\.title[^}]*\\}\\}`, "gi"), p.title);
+      b = b.replace(new RegExp(`\\{\\{[-\\s]*${v}\\.vendor[^}]*\\}\\}`, "gi"), p.vendor);
+      b = b.replace(new RegExp(`\\{\\{[-\\s]*${v}\\.handle[^}]*\\}\\}`, "gi"), p.handle);
+      b = b.replace(new RegExp(`\\{\\{[-\\s]*${v}\\.url[^}]*\\}\\}`, "gi"), `#${p.handle}`);
+      b = b.replace(new RegExp(`\\{\\{[-\\s]*${v}\\.[^}]*\\}\\}`, "gi"), "");
+      b = b.replace(/\{%[^%]*%\}/g, "");
+      return b;
+    }).join("\n");
+    html = html.replace(match[0], expanded);
+  }
+
+  // Replace section.settings
+  html = html.replace(/\{\{[-\s]*section\.settings\.(\w+)[^}]*\}\}/g, (_m, s: string) => {
+    const l = s.toLowerCase();
+    if (l.includes("title") || l.includes("heading")) return "Featured Collection";
+    if (l.includes("subtitle") || l.includes("description") || l.includes("text")) return "Discover our curated selection";
+    if (l.includes("button") || l.includes("cta")) return "Shop Now";
+    if (l.includes("url") || l.includes("link")) return "#";
+    return "";
+  });
+
+  // Strip remaining Liquid
+  html = html.replace(/\{%[^%]*%\}/g, "");
+  html = html.replace(/\{\{[^}]*\}\}/g, "");
+
+  return { body: html, css: allCss.join("\n") };
+}
+
+function buildFullHtml(bodyContent: string, extraCss: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+:root{--accent:#D33167;--text:#000;--muted:rgba(0,0,0,0.55);--bg-warm:#FAFAF7}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit;text-decoration:none}
+${extraCss}
+</style>
+</head>
+<body>${bodyContent}</body>
+</html>`;
+}
+
+export function LiquidPreview({ code, componentType, previewProducts, previewHtml: serverHtml }: LiquidPreviewProps) {
   const [copied, setCopied] = useState(false);
-  const hasPreview = !!(previewHtml && previewProducts?.length);
-  const [tab, setTab] = useState<"preview" | "code">(hasPreview ? "preview" : "code");
+  const hasProducts = !!(previewProducts && previewProducts.length > 0);
+  const [tab, setTab] = useState<"preview" | "code">(hasProducts ? "preview" : "code");
   const [expanded, setExpanded] = useState(false);
 
   const handleCopy = async () => {
@@ -22,6 +140,27 @@ export function LiquidPreview({ code, componentType, previewProducts, previewHtm
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Build preview: use server HTML if available, otherwise parse client-side, fallback to simple grid
+  const previewHtml = useMemo(() => {
+    if (serverHtml) return serverHtml;
+    if (!hasProducts) return "";
+
+    const products = previewProducts as PreviewProduct[];
+
+    // Try parsing the Liquid code
+    const parsed = parseLiquidToHtml(code, products);
+    // Check if parsing produced meaningful content (more than just whitespace/empty tags)
+    const strippedBody = parsed.body.replace(/<[^>]*>/g, "").trim();
+    if (strippedBody.length > 10) {
+      return buildFullHtml(parsed.body, parsed.css);
+    }
+
+    // Fallback: simple product grid that always works
+    return buildFullHtml(buildFallbackGrid(products), "");
+  }, [code, previewProducts, hasProducts, serverHtml]);
+
+  const showTabs = hasProducts;
 
   if (expanded) {
     return (
@@ -32,7 +171,7 @@ export function LiquidPreview({ code, componentType, previewProducts, previewHtm
             <Badge variant="outline" className="text-[10px]">{componentType}</Badge>
           </div>
           <div className="flex items-center gap-2">
-            {hasPreview ? (
+            {showTabs && (
               <>
                 <button
                   onClick={() => setTab("preview")}
@@ -51,7 +190,7 @@ export function LiquidPreview({ code, componentType, previewProducts, previewHtm
                   Code
                 </button>
               </>
-            ) : null}
+            )}
             <button onClick={handleCopy} className="text-xs text-zinc-400 hover:text-white px-2 py-1 rounded-md hover:bg-white/10">
               {copied ? "Copied!" : "Copy"}
             </button>
@@ -86,7 +225,7 @@ export function LiquidPreview({ code, componentType, previewProducts, previewHtm
             </Badge>
           </div>
           <div className="flex items-center gap-1">
-            {hasPreview ? (
+            {showTabs && (
               <>
                 <button
                   onClick={() => setTab("preview")}
@@ -109,7 +248,7 @@ export function LiquidPreview({ code, componentType, previewProducts, previewHtm
                   Code
                 </button>
               </>
-            ) : null}
+            )}
             <button
               onClick={() => setExpanded(true)}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted"
