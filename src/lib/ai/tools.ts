@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { tool } from "ai";
 import { getProducts, getOrders, getCustomers, getAnalytics, getInventory, pushSectionToTheme, forecastTrends } from "../shopify/queries";
+
 export const shopifyTools = {
   getProducts: tool({
     description:
@@ -114,30 +115,25 @@ export const shopifyTools = {
 
   generateLiquid: tool({
     description:
-      "Generate a premium Shopify Liquid section with live preview. Creates production-grade storefront code with a luxury clean beauty aesthetic (Kosas-inspired: Founders Grotesk typography, black/white palette, dusty rose #D33167 accent, refined minimalism). Use this when the user asks to create a section, page, component, or any storefront element.",
+      "Generate a premium Shopify Liquid section with live preview. You MUST always provide complete Liquid code via the 'code' parameter. Every generation must be unique.",
     inputSchema: z.object({
       componentType: z
         .enum(["featured-products", "hero-banner", "product-grid", "newsletter", "testimonials", "custom"])
-        .describe("Type of section for preview layout. Use the matching type when applicable, or 'custom' for unique requests. You must ALWAYS write your own Liquid code in the 'code' parameter regardless of type."),
+        .describe("Section type for preview layout."),
       description: z
         .string()
         .optional()
-        .describe("Additional design details or customization for the component"),
+        .describe("Design details or customization notes"),
       code: z
         .string()
         .max(50000)
-        .optional()
-        .describe("Your complete Liquid section code including {% style %} and {% schema %} blocks. Write production-grade Shopify Liquid with CSS, responsive design, and hover interactions. Keep it focused and efficient."),
+        .describe("REQUIRED. Your complete Liquid section code with {% style %} and {% schema %} blocks."),
       productCount: z
         .number()
         .optional()
-        .describe("Number of products to include for preview (default 4)"),
+        .describe("Products for preview (default 4)"),
     }),
     execute: async (params) => {
-      if (!params.code) {
-        return { error: "You must provide your own Liquid code in the 'code' parameter. Write 200+ lines of production-grade Liquid with {% style %} and {% schema %} blocks." };
-      }
-
       const products = await getProducts({ limit: params.productCount || 4 });
       const previewProducts = products.map((p) => ({
         title: p.title,
@@ -148,10 +144,8 @@ export const shopifyTools = {
         handle: p.handle,
       }));
 
-      const code = params.code;
-
       return {
-        code,
+        code: params.code,
         componentType: params.componentType,
         previewProducts,
       };

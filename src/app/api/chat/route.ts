@@ -4,21 +4,20 @@ import { SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
 import { shopifyTools } from "@/lib/ai/tools";
 import { getSession } from "@/lib/auth";
 
-export const maxDuration = 120;
+// Max out Vercel function duration — no cost concern
+export const maxDuration = 300;
 
 const MAX_MESSAGES = 50;
 
 const chatRateLimit = new Map<string, { count: number; windowStart: number }>();
-const MAX_REQUESTS_PER_MINUTE = 10;
+const MAX_REQUESTS_PER_MINUTE = 30;
 
 export async function POST(req: Request) {
-  // Verify authentication
   const session = await getSession();
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  // Rate limiting per user
   const now = Date.now();
   const userLimit = chatRateLimit.get(session.id);
   if (userLimit && now - userLimit.windowStart < 60_000) {
@@ -49,7 +48,14 @@ export async function POST(req: Request) {
       system: SYSTEM_PROMPT,
       messages: modelMessages,
       tools: shopifyTools,
-      stopWhen: stepCountIs(5),
+      maxOutputTokens: 16384,
+      temperature: 0.4,
+      stopWhen: stepCountIs(3),
+      providerOptions: {
+        openai: {
+          parallelToolCalls: true,
+        },
+      },
     });
 
     return result.toUIMessageStreamResponse();
