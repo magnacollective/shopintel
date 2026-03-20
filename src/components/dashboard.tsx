@@ -233,11 +233,14 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
                   {messages.map((message) => (
                     <MessageBubble key={message.id} message={message} />
                   ))}
-                  {isLoading && messages[messages.length - 1]?.role === "user" && (
-                    <div className="flex items-center gap-1.5 py-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                  {isLoading && (
+                    <div className="flex items-center gap-2 py-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </div>
+                      <span className="text-xs text-zinc-500 animate-pulse">Agent is working...</span>
                     </div>
                   )}
                 </div>
@@ -328,9 +331,9 @@ function MessageBubble({ message }: { message: UIMessage }) {
           }
 
           return (
-            <div key={idx} className="flex items-center gap-2 text-xs text-zinc-500 py-1">
-              <div className="h-3.5 w-3.5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-              <span>Fetching {toolName}...</span>
+            <div key={idx} className="flex items-center gap-2.5 text-xs text-indigo-400 py-2 animate-pulse">
+              <div className="h-4 w-4 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+              <span>{getToolLabel(toolName)}</span>
             </div>
           );
         }
@@ -338,6 +341,20 @@ function MessageBubble({ message }: { message: UIMessage }) {
       })}
     </div>
   );
+}
+
+function getToolLabel(toolName: string): string {
+  const labels: Record<string, string> = {
+    generateLiquid: "Generating Liquid section...",
+    getProducts: "Fetching products...",
+    getOrders: "Fetching orders...",
+    getCustomers: "Fetching customers...",
+    getAnalytics: "Analyzing store data...",
+    getInventory: "Checking inventory...",
+    forecastTrends: "Analyzing trends...",
+    deploySection: "Deploying to theme...",
+  };
+  return labels[toolName] || `Running ${toolName}...`;
 }
 
 function formatMarkdown(text: string): string {

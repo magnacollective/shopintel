@@ -166,17 +166,18 @@ export function ChatInterface() {
               <MessageBubble key={message.id} message={message} />
             ))}
 
-            {isLoading && messages[messages.length - 1]?.role === "user" && (
+            {isLoading && (
               <div className="flex gap-3 animate-fade-in-up">
                 <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
                   <span className="material-symbols-rounded text-white text-base">auto_awesome</span>
                 </div>
-                <div className="space-y-3 pt-1.5">
+                <div className="flex items-center gap-2 pt-2.5">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
                     <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
                     <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
                   </div>
+                  <span className="text-xs text-zinc-500 animate-pulse">Agent is working...</span>
                 </div>
               </div>
             )}
@@ -278,10 +279,10 @@ function MessageBubble({ message }: { message: UIMessage }) {
             return (
               <div
                 key={idx}
-                className="flex items-center gap-2.5 text-xs text-muted-foreground py-2 animate-fade-in"
+                className="flex items-center gap-2.5 text-xs py-2 animate-fade-in animate-pulse"
               >
                 <div className="h-4 w-4 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-                <span className="text-indigo-400">Fetching {toolName}...</span>
+                <span className="text-indigo-400">{getToolLabel(toolName)}</span>
               </div>
             );
           }
@@ -291,6 +292,20 @@ function MessageBubble({ message }: { message: UIMessage }) {
       </div>
     </div>
   );
+}
+
+function getToolLabel(toolName: string): string {
+  const labels: Record<string, string> = {
+    generateLiquid: "Generating Liquid section...",
+    getProducts: "Fetching products...",
+    getOrders: "Fetching orders...",
+    getCustomers: "Fetching customers...",
+    getAnalytics: "Analyzing store data...",
+    getInventory: "Checking inventory...",
+    forecastTrends: "Analyzing trends...",
+    deploySection: "Deploying to theme...",
+  };
+  return labels[toolName] || `Running ${toolName}...`;
 }
 
 function formatMarkdown(text: string): string {
