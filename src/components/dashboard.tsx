@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import { getToolName } from "ai";
 import DOMPurify from "dompurify";
@@ -66,7 +66,25 @@ interface DashboardProps {
 
 export function Dashboard({ analytics, products, orders, customers, inventoryData, user }: DashboardProps) {
   const isAdmin = user.role === "admin";
-  const { messages, sendMessage, status } = useChat();
+  const conversationIdRef = useRef<string | null>(null);
+  const savingRef = useRef(false);
+
+  const { messages, sendMessage: rawSendMessage, status } = useChat({
+    onFinish: async ({ message }) => {
+      if (!conversationIdRef.current || savingRef.current) return;
+      savingRef.current = true;
+      try {
+        await fetch(`/api/conversations/${conversationIdRef.current}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: "assistant", content: JSON.stringify(message.parts) }),
+        });
+      } finally {
+        savingRef.current = false;
+      }
+    },
+  });
+
   const [input, setInput] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -77,6 +95,36 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
   }, [messages, isLoading, chatOpen]);
+
+  const sendMessage = useCallback(async (opts: { text: string }) => {
+    // Auto-create conversation if needed
+    if (!conversationIdRef.current) {
+      try {
+        const res = await fetch("/api/conversations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: opts.text.slice(0, 60) }),
+        });
+        if (res.ok) {
+          const conv = await res.json();
+          conversationIdRef.current = conv.id;
+        }
+      } catch { /* continue without persistence */ }
+    }
+
+    // Save user message
+    if (conversationIdRef.current) {
+      try {
+        await fetch(`/api/conversations/${conversationIdRef.current}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: "user", content: JSON.stringify([{ type: "text", text: opts.text }]) }),
+        });
+      } catch { /* continue */ }
+    }
+
+    rawSendMessage(opts);
+  }, [rawSendMessage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
