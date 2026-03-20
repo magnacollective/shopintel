@@ -2,6 +2,78 @@ import { z } from "zod";
 import { tool } from "ai";
 import { getProducts, getOrders, getCustomers, getAnalytics, getInventory, pushSectionToTheme, forecastTrends } from "../shopify/queries";
 
+interface PreviewProduct {
+  title: string;
+  price: string;
+  currency: string;
+  image: string;
+  vendor: string;
+  handle: string;
+}
+
+function formatPrice(amount: string, currency: string) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(parseFloat(amount));
+}
+
+function buildPreviewHtml(liquidCode: string, products: PreviewProduct[]): string {
+  let html = liquidCode;
+
+  // Extract CSS from {% style %} and <style> tags
+  const allCss: string[] = [];
+  html = html.replace(/\{%[-\s]*style\s*%\}([\s\S]*?)\{%[-\s]*endstyle\s*%\}/gi, (_m, css) => {
+    allCss.push(css);
+    return "";
+  });
+  html = html.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (_m, css) => {
+    allCss.push(css);
+    return "";
+  });
+
+  // Remove {% schema %} block
+  html = html.replace(/\{%[-\s]*schema\s*%\}[\s\S]*?\{%[-\s]*endschema\s*%\}/gi, "");
+
+  // Unroll for-loops with product data
+  let safety = 0;
+  while (safety++ < 10) {
+    const match = html.match(/\{%[-\s]*for\s+(\w+)\s+in\s+[^%]+%\}([\s\S]*?)\{%[-\s]*endfor\s*%\}/i);
+    if (!match) break;
+    const itemVar = match[1];
+    const loopBody = match[2];
+    const unrolled = products.map((p) => {
+      let block = loopBody;
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*(?:image|media|img)[^}]*\\}\\}`, "gi"), p.image || "");
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*price[^}]*\\}\\}`, "gi"), formatPrice(p.price, p.currency));
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.title[^}]*\\}\\}`, "gi"), p.title);
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.vendor[^}]*\\}\\}`, "gi"), p.vendor);
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.handle[^}]*\\}\\}`, "gi"), p.handle);
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.url[^}]*\\}\\}`, "gi"), `#${p.handle}`);
+      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*\\}\\}`, "gi"), "");
+      block = block.replace(/\{%[^%]*%\}/g, "");
+      return block;
+    }).join("\n");
+    html = html.replace(match[0], unrolled);
+  }
+
+  // Replace section.settings
+  html = html.replace(/\{\{[-\s]*section\.settings\.(\w+)[^}]*\}\}/g, (_m, s: string) => {
+    const l = s.toLowerCase();
+    if (l.includes("title") || l.includes("heading")) return "Featured Collection";
+    if (l.includes("subtitle") || l.includes("description") || l.includes("text")) return "Discover our curated selection";
+    if (l.includes("button") || l.includes("cta")) return "Shop Now";
+    if (l.includes("url") || l.includes("link")) return "#";
+    return "";
+  });
+
+  // Strip remaining Liquid
+  html = html.replace(/\{%[^%]*%\}/g, "");
+  html = html.replace(/\{\{[^}]*\}\}/g, "");
+
+  const fonts = `<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">`;
+  const baseStyles = `* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: Roboto, sans-serif; -webkit-font-smoothing: antialiased; } :root { --accent: #D33167; --text: #000; --muted: rgba(0,0,0,0.55); --bg-warm: #FAFAF7; } img { max-width: 100%; height: auto; }`;
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${fonts}<style>${baseStyles}\n${allCss.join("\n")}</style></head><body>${html}</body></html>`;
+}
+
 export const shopifyTools = {
   getProducts: tool({
     description:
@@ -135,10 +207,14 @@ export const shopifyTools = {
         handle: p.handle,
       }));
 
+      // Build preview HTML server-side by substituting product data into the Liquid code
+      const previewHtml = buildPreviewHtml(params.liquidCode, previewProducts);
+
       return {
         code: params.liquidCode,
         componentType: params.componentType,
         previewProducts,
+        previewHtml,
       };
     },
   }),

@@ -1,41 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-interface PreviewProduct {
-  title: string;
-  price: string;
-  currency: string;
-  image: string;
-  vendor: string;
-  handle: string;
-}
 
 interface LiquidPreviewProps {
   code: string;
   componentType: string;
-  previewProducts?: PreviewProduct[];
+  previewProducts?: unknown[];
+  previewHtml?: string;
 }
 
-const PREVIEW_FONTS = `<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">`;
-
-const PREVIEW_BASE_STYLES = `
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
-  :root {
-    --accent: #D33167;
-    --text: #000;
-    --muted: rgba(0,0,0,0.55);
-    --light: rgba(0,0,0,0.25);
-    --bg-warm: #FAFAF7;
-  }
-`;
-
-export function LiquidPreview({ code, componentType, previewProducts }: LiquidPreviewProps) {
+export function LiquidPreview({ code, componentType, previewProducts, previewHtml }: LiquidPreviewProps) {
   const [copied, setCopied] = useState(false);
-  const [tab, setTab] = useState<"preview" | "code">(previewProducts?.length ? "preview" : "code");
+  const hasPreview = !!(previewHtml && previewProducts?.length);
+  const [tab, setTab] = useState<"preview" | "code">(hasPreview ? "preview" : "code");
   const [expanded, setExpanded] = useState(false);
 
   const handleCopy = async () => {
@@ -43,11 +22,6 @@ export function LiquidPreview({ code, componentType, previewProducts }: LiquidPr
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const previewHtml = useMemo(() => {
-    if (!code) return "";
-    return buildPreviewFromCode(code, previewProducts || []);
-  }, [code, previewProducts]);
 
   if (expanded) {
     return (
@@ -58,7 +32,7 @@ export function LiquidPreview({ code, componentType, previewProducts }: LiquidPr
             <Badge variant="outline" className="text-[10px]">{componentType}</Badge>
           </div>
           <div className="flex items-center gap-2">
-            {previewProducts?.length ? (
+            {hasPreview ? (
               <>
                 <button
                   onClick={() => setTab("preview")}
@@ -88,7 +62,7 @@ export function LiquidPreview({ code, componentType, previewProducts }: LiquidPr
         </div>
         <div className="flex-1 overflow-auto">
           {tab === "preview" && previewHtml ? (
-            <iframe srcDoc={previewHtml} className="w-full h-full bg-white" style={{ border: "none" }} sandbox="allow-same-origin" title="Liquid section preview" />
+            <iframe srcDoc={previewHtml} className="w-full h-full bg-white" style={{ border: "none" }} title="Liquid section preview" />
           ) : (
             <pre className="bg-zinc-950 text-zinc-100 p-6 overflow-auto text-xs leading-relaxed h-full">
               <code>{code}</code>
@@ -112,7 +86,7 @@ export function LiquidPreview({ code, componentType, previewProducts }: LiquidPr
             </Badge>
           </div>
           <div className="flex items-center gap-1">
-            {previewProducts?.length ? (
+            {hasPreview ? (
               <>
                 <button
                   onClick={() => setTab("preview")}
@@ -165,7 +139,6 @@ export function LiquidPreview({ code, componentType, previewProducts }: LiquidPr
               srcDoc={previewHtml}
               className="w-full bg-white"
               style={{ height: "600px", border: "none" }}
-              sandbox="allow-same-origin"
               title="Liquid section preview"
             />
           </div>
@@ -177,90 +150,4 @@ export function LiquidPreview({ code, componentType, previewProducts }: LiquidPr
       </CardContent>
     </Card>
   );
-}
-
-function formatPrice(amount: string, currency: string) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(parseFloat(amount));
-}
-
-function buildPreviewFromCode(code: string, products: PreviewProduct[]): string {
-  let html = code;
-
-  // 1. Extract CSS from {% style %} blocks AND regular <style> tags
-  const allCss: string[] = [];
-  // Liquid {% style %} blocks
-  html = html.replace(/\{%[-\s]*style\s*%\}([\s\S]*?)\{%[-\s]*endstyle\s*%\}/gi, (_m, css) => {
-    allCss.push(css);
-    return "";
-  });
-  // Regular <style> tags
-  html = html.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (_m, css) => {
-    allCss.push(css);
-    return "";
-  });
-
-  // 2. Remove {% schema %} block (JSON config, not renderable)
-  html = html.replace(/\{%[-\s]*schema\s*%\}[\s\S]*?\{%[-\s]*endschema\s*%\}/gi, "");
-
-  // 3. Unroll ALL for-loops with product data
-  // Very flexible: handles any collection path, limit params, whitespace variations
-  const forLoopRegex = /\{%[-\s]*for\s+(\w+)\s+in\s+[^%]+%\}([\s\S]*?)\{%[-\s]*endfor\s*%\}/gi;
-  let loopMatch;
-  while ((loopMatch = forLoopRegex.exec(html)) !== null) {
-    if (products.length === 0) break;
-    const itemVar = loopMatch[1];
-    const loopBody = loopMatch[2];
-    const unrolled = products.map((p) => {
-      let block = loopBody;
-      // Image — catch any variant: featured_image, images[0], media[0], image, etc.
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*(?:image|media|img)[^}]*\\}\\}`, "gi"), p.image || "");
-      // Price — catch any variant with | money, | money_with_currency, etc.
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*price[^}]*\\}\\}`, "gi"), formatPrice(p.price, p.currency));
-      // Title
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.title[^}]*\\}\\}`, "gi"), p.title);
-      // Vendor
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.vendor[^}]*\\}\\}`, "gi"), p.vendor);
-      // Handle
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.handle[^}]*\\}\\}`, "gi"), p.handle);
-      // URL
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.url[^}]*\\}\\}`, "gi"), `#${p.handle}`);
-      // Any remaining {{ product.* }} — blank them out
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*\\}\\}`, "gi"), "");
-      // Strip inner Liquid tags (conditionals, assigns, etc.)
-      block = block.replace(/\{%[^%]*%\}/g, "");
-      return block;
-    }).join("\n");
-    html = html.replace(loopMatch[0], unrolled);
-    forLoopRegex.lastIndex = 0;
-  }
-
-  // 4. Replace section.settings references with defaults
-  html = html.replace(/\{\{[-\s]*section\.settings\.(\w+)[^}]*\}\}/g, (_match, setting: string) => {
-    const s = setting.toLowerCase();
-    if (s.includes("title") || s.includes("heading")) return "Featured Collection";
-    if (s.includes("subtitle") || s.includes("description") || s.includes("text")) return "Discover our curated selection";
-    if (s.includes("button") || s.includes("cta")) return "Shop Now";
-    if (s.includes("url") || s.includes("link")) return "#";
-    return "";
-  });
-
-  // 5. Strip all remaining Liquid tags and output
-  html = html.replace(/\{%[^%]*%\}/g, "");
-  html = html.replace(/\{\{[^}]*\}\}/g, "");
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  ${PREVIEW_FONTS}
-  <style>
-    ${PREVIEW_BASE_STYLES}
-    ${allCss.join("\n")}
-  </style>
-</head>
-<body>
-  ${html}
-</body>
-</html>`;
 }

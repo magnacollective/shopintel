@@ -86,12 +86,14 @@ export function ToolResultRenderer({ toolName, result }: ToolResultRendererProps
         code: string;
         componentType: string;
         previewProducts?: { title: string; price: string; currency: string; image: string; vendor: string; handle: string }[];
+        previewHtml?: string;
       };
       return (
         <LiquidPreview
           code={data.code}
           componentType={data.componentType}
           previewProducts={data.previewProducts}
+          previewHtml={data.previewHtml}
         />
       );
     }
