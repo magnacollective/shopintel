@@ -6,10 +6,16 @@ import { getProducts, getOrders, getCustomers, getAnalytics, getInventory, pushS
 interface PreviewProduct {
   title: string;
   price: string;
+  compare_at_price: string | null;
   currency: string;
   image: string;
+  image_alt: string;
   vendor: string;
   handle: string;
+  description: string;
+  product_type: string;
+  available: boolean;
+  variants_count: number;
 }
 
 function formatPrice(amount: string, currency: string) {
@@ -48,31 +54,56 @@ function preprocessLiquid(code: string): string {
 }
 
 async function renderLiquidPreview(liquidCode: string, products: PreviewProduct[]): Promise<string> {
-  // Build the Liquid context with Shopify-like data structures
-  const liquidProducts = products.map((p) => ({
-    title: p.title,
-    vendor: p.vendor,
-    handle: p.handle,
-    url: `/products/${p.handle}`,
-    price: parseFloat(p.price) * 100, // Shopify stores price in cents
-    price_min: parseFloat(p.price) * 100,
-    featured_image: p.image,
-    featured_media: { preview_image: { src: p.image } },
-    images: [p.image],
-    media: [{ preview_image: { src: p.image } }],
-    available: true,
-    compare_at_price: null,
+  // Build the Liquid context with full Shopify-like data structures
+  const liquidProducts = products.map((p) => {
+    const priceCents = Math.round(parseFloat(p.price) * 100);
+    const comparePrice = p.compare_at_price ? Math.round(parseFloat(p.compare_at_price) * 100) : null;
+    return {
+      title: p.title,
+      vendor: p.vendor,
+      handle: p.handle,
+      url: `/products/${p.handle}`,
+      description: p.description,
+      type: p.product_type,
+      product_type: p.product_type,
+      price: priceCents,
+      price_min: priceCents,
+      price_max: priceCents,
+      compare_at_price: comparePrice,
+      compare_at_price_min: comparePrice,
+      available: p.available,
+      featured_image: p.image,
+      featured_media: { preview_image: { src: p.image } },
+      images: [p.image],
+      media: [{ preview_image: { src: p.image } }],
+      image: { src: p.image, alt: p.image_alt },
+      tags: [],
+      options: [],
+      variants: Array.from({ length: p.variants_count || 1 }, (_, i) => ({
+        price: priceCents,
+        compare_at_price: comparePrice,
+        title: i === 0 ? "Default" : `Variant ${i + 1}`,
+        available: p.available,
+        image: { src: p.image },
+      })),
+      has_only_default_variant: p.variants_count <= 1,
+    };
+  });
+
+  const collectionObj = {
+    title: "All Products",
+    handle: "all",
     description: "",
-    tags: [],
-    type: "",
-    variants: [{ price: parseFloat(p.price) * 100, title: "Default" }],
-  }));
+    products: liquidProducts,
+    products_count: liquidProducts.length,
+    all_products_count: liquidProducts.length,
+  };
 
   const context = {
-    collection: { products: liquidProducts },
-    collections: { all: { products: liquidProducts }, frontpage: { products: liquidProducts } },
+    collection: collectionObj,
+    collections: { all: collectionObj, frontpage: collectionObj },
     section: {
-      id: "preview",
+      id: "preview-section",
       settings: {
         title: "Featured Collection",
         heading: "Featured Collection",
@@ -83,19 +114,34 @@ async function renderLiquidPreview(liquidCode: string, products: PreviewProduct[
         button_label: "Shop Now",
         button_link: "#",
         button_url: "#",
-        collection: { products: liquidProducts },
+        cta_text: "Shop Now",
+        cta_link: "#",
+        collection: collectionObj,
         columns: 4,
+        columns_desktop: 4,
+        columns_mobile: 2,
         rows: 1,
-        products_to_show: 4,
+        products_to_show: 8,
         show_vendor: true,
         show_price: true,
         show_image: true,
+        show_secondary_image: false,
+        enable_quick_add: true,
+        image_ratio: "portrait",
         bg_color: "#ffffff",
         text_color: "#000000",
         accent_color: "#D33167",
+        padding_top: 80,
+        padding_bottom: 80,
       },
     },
     products: liquidProducts,
+    shop: {
+      name: "ShopIntel Store",
+      url: "#",
+      currency: products[0]?.currency || "USD",
+      money_format: "${{amount}}",
+    },
   };
 
   try {
@@ -235,14 +281,20 @@ export const shopifyTools = {
         .describe("The complete Shopify Liquid section. Must include HTML, a {% style %} block with all CSS, and a {% schema %} block with settings and presets. This is the ONLY field for code."),
     }),
     execute: async (params) => {
-      const products = await getProducts({ limit: 4 });
+      const products = await getProducts({ limit: 8 });
       const previewProducts = products.map((p) => ({
         title: p.title,
         price: p.priceRangeV2.minVariantPrice.amount,
+        compare_at_price: p.priceRangeV2.maxVariantPrice.amount !== p.priceRangeV2.minVariantPrice.amount ? p.priceRangeV2.maxVariantPrice.amount : null,
         currency: p.priceRangeV2.minVariantPrice.currencyCode,
         image: p.featuredImage?.url || "",
+        image_alt: p.featuredImage?.altText || p.title,
         vendor: p.vendor,
         handle: p.handle,
+        description: p.description,
+        product_type: p.productType,
+        available: p.totalInventory > 0,
+        variants_count: p.variants.nodes.length,
       }));
 
       // Render preview HTML using the real Liquid engine with product data
