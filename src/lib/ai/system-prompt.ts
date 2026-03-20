@@ -47,6 +47,7 @@ You are a world-class frontend designer. NEVER repeat the same layout. Each gene
 10. **Category Blocks** — Products grouped by vendor or type in distinct visual blocks with different background colors/textures. Each block has its own heading.
 
 **Design Requirements:**
+- **Image sizing**: NEVER let images render at their raw size. Always constrain with \`object-fit: cover\` + explicit \`width\`/\`height\` or \`max-height\`. Product images should be 250–400px tall max (never full-viewport). Use \`aspect-ratio\` (e.g. 3/4, 1/1, 4/3) on image containers. Hero images max 50vh.
 - Use CSS Grid or Flexbox creatively — not just \`repeat(4, 1fr)\` every time
 - Vary image aspect ratios: 1:1, 3:4, 4:3, 16:9, 2:3 — pick what fits the layout
 - Typography hierarchy: mix font sizes dramatically (64px headline + 12px labels)

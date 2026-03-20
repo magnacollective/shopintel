@@ -152,7 +152,7 @@ async function renderLiquidPreview(liquidCode: string, products: PreviewProduct[
     const rendered = await liquid.parseAndRender(preprocessed, context);
 
     const fonts = `<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">`;
-    const baseStyles = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:Roboto,sans-serif;-webkit-font-smoothing:antialiased}:root{--accent:#D33167;--text:#000;--muted:rgba(0,0,0,0.55);--bg-warm:#FAFAF7}img{max-width:100%;height:auto;display:block}a{color:inherit;text-decoration:none}`;
+    const baseStyles = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:Roboto,sans-serif;-webkit-font-smoothing:antialiased}:root{--accent:#D33167;--text:#000;--muted:rgba(0,0,0,0.55);--bg-warm:#FAFAF7}img{max-width:100%;height:auto;display:block;object-fit:cover}a{color:inherit;text-decoration:none}`;
 
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${fonts}<style>${baseStyles}</style></head><body>${rendered}</body></html>`;
   } catch (err) {
