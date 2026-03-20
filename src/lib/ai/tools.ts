@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { tool } from "ai";
+import { Liquid } from "liquidjs";
 import { getProducts, getOrders, getCustomers, getAnalytics, getInventory, pushSectionToTheme, forecastTrends } from "../shopify/queries";
 
 interface PreviewProduct {
@@ -15,63 +16,100 @@ function formatPrice(amount: string, currency: string) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(parseFloat(amount));
 }
 
-function buildPreviewHtml(liquidCode: string, products: PreviewProduct[]): string {
-  let html = liquidCode;
+const liquid = new Liquid({ strictFilters: false, strictVariables: false });
 
-  // Extract CSS from {% style %} and <style> tags
-  const allCss: string[] = [];
-  html = html.replace(/\{%[-\s]*style\s*%\}([\s\S]*?)\{%[-\s]*endstyle\s*%\}/gi, (_m, css) => {
-    allCss.push(css);
+// Register Shopify-specific filters that LiquidJS doesn't have
+liquid.registerFilter("money", (v) => {
+  const n = typeof v === "string" ? parseFloat(v) : Number(v);
+  return `$${isNaN(n) ? "0.00" : n.toFixed(2)}`;
+});
+liquid.registerFilter("money_with_currency", (v) => {
+  const n = typeof v === "string" ? parseFloat(v) : Number(v);
+  return `$${isNaN(n) ? "0.00" : n.toFixed(2)} USD`;
+});
+liquid.registerFilter("img_url", (v) => typeof v === "string" ? v : "");
+liquid.registerFilter("image_url", (v) => typeof v === "string" ? v : "");
+liquid.registerFilter("asset_url", (v) => typeof v === "string" ? v : "");
+liquid.registerFilter("stylesheet_tag", (v) => `<link rel="stylesheet" href="${v}">`);
+liquid.registerFilter("script_tag", (v) => `<script src="${v}"><\/script>`);
+
+/**
+ * Preprocess Shopify Liquid to strip Shopify-specific blocks that
+ * liquidjs doesn't understand ({% style %}, {% schema %}).
+ * Converts {% style %} to <style>, removes {% schema %} entirely.
+ */
+function preprocessLiquid(code: string): string {
+  // Convert {% style %} ... {% endstyle %} to <style> ... </style>
+  let result = code.replace(/\{%[-\s]*style\s*%\}/gi, "<style>");
+  result = result.replace(/\{%[-\s]*endstyle\s*%\}/gi, "</style>");
+  // Remove {% schema %} ... {% endschema %} entirely
+  result = result.replace(/\{%[-\s]*schema\s*%\}[\s\S]*?\{%[-\s]*endschema\s*%\}/gi, "");
+  return result;
+}
+
+async function renderLiquidPreview(liquidCode: string, products: PreviewProduct[]): Promise<string> {
+  // Build the Liquid context with Shopify-like data structures
+  const liquidProducts = products.map((p) => ({
+    title: p.title,
+    vendor: p.vendor,
+    handle: p.handle,
+    url: `/products/${p.handle}`,
+    price: parseFloat(p.price) * 100, // Shopify stores price in cents
+    price_min: parseFloat(p.price) * 100,
+    featured_image: p.image,
+    featured_media: { preview_image: { src: p.image } },
+    images: [p.image],
+    media: [{ preview_image: { src: p.image } }],
+    available: true,
+    compare_at_price: null,
+    description: "",
+    tags: [],
+    type: "",
+    variants: [{ price: parseFloat(p.price) * 100, title: "Default" }],
+  }));
+
+  const context = {
+    collection: { products: liquidProducts },
+    collections: { all: { products: liquidProducts }, frontpage: { products: liquidProducts } },
+    section: {
+      id: "preview",
+      settings: {
+        title: "Featured Collection",
+        heading: "Featured Collection",
+        subtitle: "Discover our curated selection",
+        description: "Discover our curated selection",
+        subheading: "Discover our curated selection",
+        button_text: "Shop Now",
+        button_label: "Shop Now",
+        button_link: "#",
+        button_url: "#",
+        collection: { products: liquidProducts },
+        columns: 4,
+        rows: 1,
+        products_to_show: 4,
+        show_vendor: true,
+        show_price: true,
+        show_image: true,
+        bg_color: "#ffffff",
+        text_color: "#000000",
+        accent_color: "#D33167",
+      },
+    },
+    products: liquidProducts,
+  };
+
+  try {
+    const preprocessed = preprocessLiquid(liquidCode);
+    const rendered = await liquid.parseAndRender(preprocessed, context);
+
+    const fonts = `<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">`;
+    const baseStyles = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:Roboto,sans-serif;-webkit-font-smoothing:antialiased}:root{--accent:#D33167;--text:#000;--muted:rgba(0,0,0,0.55);--bg-warm:#FAFAF7}img{max-width:100%;height:auto;display:block}a{color:inherit;text-decoration:none}`;
+
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${fonts}<style>${baseStyles}</style></head><body>${rendered}</body></html>`;
+  } catch (err) {
+    console.error("[liquid] Render error:", err);
     return "";
-  });
-  html = html.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (_m, css) => {
-    allCss.push(css);
-    return "";
-  });
-
-  // Remove {% schema %} block
-  html = html.replace(/\{%[-\s]*schema\s*%\}[\s\S]*?\{%[-\s]*endschema\s*%\}/gi, "");
-
-  // Unroll for-loops with product data
-  let safety = 0;
-  while (safety++ < 10) {
-    const match = html.match(/\{%[-\s]*for\s+(\w+)\s+in\s+[^%]+%\}([\s\S]*?)\{%[-\s]*endfor\s*%\}/i);
-    if (!match) break;
-    const itemVar = match[1];
-    const loopBody = match[2];
-    const unrolled = products.map((p) => {
-      let block = loopBody;
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*(?:image|media|img)[^}]*\\}\\}`, "gi"), p.image || "");
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*price[^}]*\\}\\}`, "gi"), formatPrice(p.price, p.currency));
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.title[^}]*\\}\\}`, "gi"), p.title);
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.vendor[^}]*\\}\\}`, "gi"), p.vendor);
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.handle[^}]*\\}\\}`, "gi"), p.handle);
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.url[^}]*\\}\\}`, "gi"), `#${p.handle}`);
-      block = block.replace(new RegExp(`\\{\\{[-\\s]*${itemVar}\\.[^}]*\\}\\}`, "gi"), "");
-      block = block.replace(/\{%[^%]*%\}/g, "");
-      return block;
-    }).join("\n");
-    html = html.replace(match[0], unrolled);
   }
-
-  // Replace section.settings
-  html = html.replace(/\{\{[-\s]*section\.settings\.(\w+)[^}]*\}\}/g, (_m, s: string) => {
-    const l = s.toLowerCase();
-    if (l.includes("title") || l.includes("heading")) return "Featured Collection";
-    if (l.includes("subtitle") || l.includes("description") || l.includes("text")) return "Discover our curated selection";
-    if (l.includes("button") || l.includes("cta")) return "Shop Now";
-    if (l.includes("url") || l.includes("link")) return "#";
-    return "";
-  });
-
-  // Strip remaining Liquid
-  html = html.replace(/\{%[^%]*%\}/g, "");
-  html = html.replace(/\{\{[^}]*\}\}/g, "");
-
-  const fonts = `<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">`;
-  const baseStyles = `* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: Roboto, sans-serif; -webkit-font-smoothing: antialiased; } :root { --accent: #D33167; --text: #000; --muted: rgba(0,0,0,0.55); --bg-warm: #FAFAF7; } img { max-width: 100%; height: auto; }`;
-
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${fonts}<style>${baseStyles}\n${allCss.join("\n")}</style></head><body>${html}</body></html>`;
 }
 
 export const shopifyTools = {
@@ -207,8 +245,8 @@ export const shopifyTools = {
         handle: p.handle,
       }));
 
-      // Build preview HTML server-side by substituting product data into the Liquid code
-      const previewHtml = buildPreviewHtml(params.liquidCode, previewProducts);
+      // Render preview HTML using the real Liquid engine with product data
+      const previewHtml = await renderLiquidPreview(params.liquidCode, previewProducts);
 
       return {
         code: params.liquidCode,

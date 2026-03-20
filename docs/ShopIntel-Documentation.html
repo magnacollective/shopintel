@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ShopIntel — Technical Documentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --accent: #6366f1;
+    --accent-light: #818cf8;
+    --rose: #D33167;
+    --bg: #ffffff;
+    --text: #1a1a2e;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --code-bg: #f8fafc;
+    --section-bg: #f1f5f9;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page {
+    size: A4;
+    margin: 0.75in;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 10pt;
+    line-height: 1.65;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Cover Page */
+  .cover {
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 90vh;
+    text-align: center;
+    padding: 3rem;
+  }
+  .cover-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+  }
+  .cover-logo span {
+    color: white;
+    font-size: 2.5rem;
+  }
+  .cover h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #1a1a2e, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  .cover .subtitle {
+    font-size: 1.15rem;
+    color: var(--muted);
+    font-weight: 400;
+    margin-bottom: 3rem;
+  }
+  .cover-meta {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 2;
+  }
+  .cover-meta strong { color: var(--text); }
+
+  /* TOC */
+  .toc {
+    page-break-after: always;
+    padding: 2rem 0;
+  }
+  .toc h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--accent);
+  }
+  .toc-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.5rem 0;
+    border-bottom: 1px dotted var(--border);
+    font-size: 0.95rem;
+  }
+  .toc-item a {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .toc-item .num { color: var(--accent); font-weight: 600; margin-right: 0.75rem; }
+  .toc-sub {
+    padding-left: 2rem;
+    font-size: 0.85rem;
+    border-bottom: 1px dotted #f0f0f0;
+  }
+  .toc-sub a { font-weight: 400; color: var(--muted); }
+
+  /* Section headings */
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 2rem 0 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--accent);
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1.25rem 0 0.5rem;
+    page-break-after: avoid;
+  }
+  h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin: 1rem 0 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  p { margin-bottom: 0.6rem; }
+
+  /* Code */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    margin: 0.75rem 0 1rem;
+    page-break-inside: avoid;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0 1rem;
+    font-size: 0.85rem;
+    page-break-inside: avoid;
+  }
+  th {
+    background: var(--section-bg);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+  }
+  td {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:nth-child(even) { background: #fafbfc; }
+
+  /* Info boxes */
+  .info-box {
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    margin: 0.75rem 0 1rem;
+    font-size: 0.9rem;
+    page-break-inside: avoid;
+  }
+  .info-box.note {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+  }
+  .info-box.warning {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+  }
+  .info-box.danger {
+    background: #fef2f2;
+    border-left: 4px solid #ef4444;
+  }
+  .info-box.success {
+    background: #f0fdf4;
+    border-left: 4px solid #22c55e;
+  }
+  .info-box strong { display: block; margin-bottom: 0.25rem; }
+
+  /* Lists */
+  ul, ol {
+    margin: 0.4rem 0 0.8rem;
+    padding-left: 1.5rem;
+  }
+  li { margin-bottom: 0.3rem; }
+
+  /* Architecture diagram (ASCII) */
+  .diagram {
+    background: #0f172a;
+    color: #94a3b8;
+    padding: 1.5rem;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 1rem 0;
+    white-space: pre;
+  }
+  .diagram .highlight { color: #818cf8; }
+  .diagram .green { color: #4ade80; }
+  .diagram .rose { color: #f472b6; }
+  .diagram .yellow { color: #facc15; }
+
+  /* File tree */
+  .file-tree {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    margin: 0.75rem 0 1rem;
+  }
+  .file-tree .dir { color: var(--accent); font-weight: 500; }
+  .file-tree .file { color: var(--muted); }
+  .file-tree .comment { color: #94a3b8; font-style: italic; }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .badge-indigo { background: #eef2ff; color: #4f46e5; }
+  .badge-green { background: #f0fdf4; color: #16a34a; }
+  .badge-amber { background: #fffbeb; color: #d97706; }
+  .badge-red { background: #fef2f2; color: #dc2626; }
+  .badge-gray { background: #f1f5f9; color: #475569; }
+
+  .page-break { page-break-before: always; }
+
+  /* Separator */
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== COVER PAGE ==================== -->
+<div class="cover">
+  <div class="cover-logo"><span>SI</span></div>
+  <h1>ShopIntel</h1>
+  <p class="subtitle">AI-Powered Shopify Command Center</p>
+  <p class="subtitle" style="font-size: 0.95rem; max-width: 500px;">
+    Complete Technical Documentation — Architecture, Security, Infrastructure, API Reference, and Deployment Guide
+  </p>
+  <div class="cover-meta">
+    <strong>Version:</strong> 1.0.0<br>
+    <strong>Framework:</strong> Next.js 16.2 / React 19 / TypeScript 5<br>
+    <strong>AI Model:</strong> OpenAI GPT-5.4 via Vercel AI SDK v6<br>
+    <strong>Database:</strong> PostgreSQL on Railway / Prisma 7.5<br>
+    <strong>Deployment:</strong> Vercel (Edge + Serverless)<br>
+    <strong>Prepared by:</strong> Growth Capital Engineering<br>
+    <strong>Date:</strong> March 2026
+  </div>
+</div>
+
+<!-- ==================== TABLE OF CONTENTS ==================== -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <div class="toc-item"><span><span class="num">1</span> Executive Overview</span></div>
+  <div class="toc-item"><span><span class="num">2</span> System Architecture</span></div>
+  <div class="toc-item toc-sub"><span>2.1 High-Level Architecture</span></div>
+  <div class="toc-item toc-sub"><span>2.2 Request Flow</span></div>
+  <div class="toc-item toc-sub"><span>2.3 Technology Stack</span></div>
+  <div class="toc-item"><span><span class="num">3</span> Project Structure</span></div>
+  <div class="toc-item"><span><span class="num">4</span> Authentication &amp; Security</span></div>
+  <div class="toc-item toc-sub"><span>4.1 JWT Authentication</span></div>
+  <div class="toc-item toc-sub"><span>4.2 Password Hashing</span></div>
+  <div class="toc-item toc-sub"><span>4.3 Middleware &amp; Security Headers</span></div>
+  <div class="toc-item toc-sub"><span>4.4 Rate Limiting</span></div>
+  <div class="toc-item toc-sub"><span>4.5 Role-Based Access Control</span></div>
+  <div class="toc-item"><span><span class="num">5</span> Database &amp; Railway</span></div>
+  <div class="toc-item toc-sub"><span>5.1 Schema Design</span></div>
+  <div class="toc-item toc-sub"><span>5.2 Prisma ORM</span></div>
+  <div class="toc-item toc-sub"><span>5.3 Railway Configuration</span></div>
+  <div class="toc-item"><span><span class="num">6</span> API Reference</span></div>
+  <div class="toc-item toc-sub"><span>6.1 Auth Endpoints</span></div>
+  <div class="toc-item toc-sub"><span>6.2 Chat Endpoint</span></div>
+  <div class="toc-item toc-sub"><span>6.3 Conversation Endpoints</span></div>
+  <div class="toc-item"><span><span class="num">7</span> AI Agent System</span></div>
+  <div class="toc-item toc-sub"><span>7.1 System Prompt</span></div>
+  <div class="toc-item toc-sub"><span>7.2 Tool Definitions</span></div>
+  <div class="toc-item toc-sub"><span>7.3 Streaming &amp; Generative UI</span></div>
+  <div class="toc-item"><span><span class="num">8</span> Shopify Integration</span></div>
+  <div class="toc-item toc-sub"><span>8.1 GraphQL Client</span></div>
+  <div class="toc-item toc-sub"><span>8.2 Query Functions</span></div>
+  <div class="toc-item toc-sub"><span>8.3 Analytics Engine</span></div>
+  <div class="toc-item toc-sub"><span>8.4 Trend Forecasting</span></div>
+  <div class="toc-item toc-sub"><span>8.5 Theme Deployment</span></div>
+  <div class="toc-item"><span><span class="num">9</span> Frontend &amp; Components</span></div>
+  <div class="toc-item toc-sub"><span>9.1 Dashboard Layout</span></div>
+  <div class="toc-item toc-sub"><span>9.2 Generative UI Components</span></div>
+  <div class="toc-item toc-sub"><span>9.3 Chat Interface</span></div>
+  <div class="toc-item toc-sub"><span>9.4 Liquid Preview System</span></div>
+  <div class="toc-item"><span><span class="num">10</span> Vercel Deployment</span></div>
+  <div class="toc-item toc-sub"><span>10.1 Build Pipeline</span></div>
+  <div class="toc-item toc-sub"><span>10.2 Environment Variables</span></div>
+  <div class="toc-item toc-sub"><span>10.3 Runtime Configuration</span></div>
+  <div class="toc-item"><span><span class="num">11</span> Environment Variables Reference</span></div>
+  <div class="toc-item"><span><span class="num">12</span> Demo Credentials &amp; Quick Start</span></div>
+</div>
+
+<!-- ==================== 1. EXECUTIVE OVERVIEW ==================== -->
+<h2>1. Executive Overview</h2>
+
+<p><strong>ShopIntel</strong> is an autonomous AI agent for Shopify merchants, built as a full-stack Next.js application. It combines a real-time analytics dashboard with a natural-language chat interface powered by GPT-5.4. The AI agent doesn't just answer questions — it proactively analyzes store data, predicts trends, generates production-grade Shopify Liquid code, and deploys it directly to live themes.</p>
+
+<h3>Key Capabilities</h3>
+<div class="two-col">
+  <div>
+    <ul>
+      <li><strong>Natural Language Querying</strong> — Ask "How are sales?" and get interactive charts, KPIs, and forecasts</li>
+      <li><strong>Generative UI</strong> — AI selects and renders the right React component (charts, tables, grids) in real-time</li>
+      <li><strong>Trend Forecasting</strong> — WoW/MoM growth, anomaly detection, product-level trends</li>
+    </ul>
+  </div>
+  <div>
+    <ul>
+      <li><strong>Liquid Code Generation</strong> — AI writes complete Shopify sections with preview</li>
+      <li><strong>One-Click Deploy</strong> — Push generated code directly to the live Shopify theme</li>
+      <li><strong>Persistent Conversations</strong> — Chat history saved to PostgreSQL, restored on refresh</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Architecture Summary</h3>
+<div class="diagram"><span class="highlight">Browser</span>  ──&gt;  <span class="green">Vercel (Next.js 16)</span>  ──&gt;  <span class="yellow">OpenAI GPT-5.4</span>  ──&gt;  <span class="rose">Shopify Admin API</span>
+                          │
+                          └──&gt;  <span class="green">Railway PostgreSQL</span> (Prisma 7.5)</div>
+
+<!-- ==================== 2. SYSTEM ARCHITECTURE ==================== -->
+<h2 class="page-break">2. System Architecture</h2>
+
+<h3>2.1 High-Level Architecture</h3>
+<div class="diagram">
+┌─────────────────────────────────────────────────────────────────────┐
+│                         <span class="highlight">CLIENT (Browser)</span>                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐   │
+│  │  Dashboard    │  │  Chat UI     │  │  Generative Components │   │
+│  │  (Analytics)  │  │  (useChat)   │  │  (Charts, Tables, etc) │   │
+│  └──────┬───────┘  └──────┬───────┘  └────────────┬───────────┘   │
+│         └─────────────────┼───────────────────────┘               │
+│                           │ HTTP/Streaming                         │
+└───────────────────────────┼───────────────────────────────────────┘
+                            │
+┌───────────────────────────┼───────────────────────────────────────┐
+│                    <span class="green">VERCEL (Next.js 16)</span>                            │
+│                           │                                        │
+│  ┌────────────────────────┴────────────────────────────┐          │
+│  │                   <span class="highlight">Proxy Middleware</span>                    │          │
+│  │          JWT Verification + Security Headers         │          │
+│  └────────────────────────┬────────────────────────────┘          │
+│                           │                                        │
+│  ┌──────────┐  ┌──────────┴──────────┐  ┌──────────────────┐     │
+│  │ Auth API │  │    Chat API         │  │ Conversation API │     │
+│  │ /login   │  │ streamText() +      │  │ CRUD + Messages  │     │
+│  │ /logout  │  │ Tool Execution      │  │                  │     │
+│  │ /me      │  │                     │  │                  │     │
+│  └──────────┘  └──────────┬──────────┘  └────────┬─────────┘     │
+│                           │                       │                │
+└───────────────────────────┼───────────────────────┼────────────────┘
+                            │                       │
+            ┌───────────────┼───────────┐           │
+            │               │           │           │
+   ┌────────▼──────┐ ┌─────▼──────┐    │    ┌──────▼──────────┐
+   │ <span class="yellow">OpenAI GPT-5.4</span>│ │<span class="rose">Shopify API</span> │    │    │ <span class="green">Railway Postgres</span> │
+   │ (Tool Calling)│ │ (GraphQL)  │    │    │ (Prisma 7.5)    │
+   └───────────────┘ └────────────┘    │    └─────────────────┘
+                                       │
+                              ┌────────▼────────┐
+                              │ <span class="rose">Shopify Theme</span>   │
+                              │ (Asset Deploy)   │
+                              └─────────────────┘
+</div>
+
+<h3>2.2 Request Flow — AI Chat</h3>
+<ol>
+  <li>User types message in chat input</li>
+  <li><code>usePersistedChat</code> hook creates/loads conversation in PostgreSQL</li>
+  <li>Message sent to <code>/api/chat</code> as streaming POST request</li>
+  <li>Proxy middleware verifies JWT session token</li>
+  <li>API converts messages, calls <code>streamText()</code> with GPT-5.4 + tool definitions</li>
+  <li>Model decides which tools to call (getAnalytics, getProducts, etc.)</li>
+  <li>Tools execute Shopify GraphQL queries, return structured data</li>
+  <li>Results stream back as UI message chunks</li>
+  <li><code>ToolResultRenderer</code> maps tool names to React components (charts, tables, grids)</li>
+  <li>Components render in real-time as data arrives</li>
+  <li>On completion, assistant message saved to PostgreSQL</li>
+</ol>
+
+<h3>2.3 Technology Stack</h3>
+<table>
+  <tr><th>Layer</th><th>Technology</th><th>Version</th></tr>
+  <tr><td>Framework</td><td>Next.js (App Router)</td><td>16.2.0</td></tr>
+  <tr><td>Runtime</td><td>React</td><td>19.2.4</td></tr>
+  <tr><td>Language</td><td>TypeScript</td><td>5.x</td></tr>
+  <tr><td>AI SDK</td><td>Vercel AI SDK</td><td>6.0.116</td></tr>
+  <tr><td>LLM</td><td>OpenAI GPT-5.4</td><td>2026-03-05</td></tr>
+  <tr><td>Database</td><td>PostgreSQL via Railway</td><td>16</td></tr>
+  <tr><td>ORM</td><td>Prisma</td><td>7.5.0</td></tr>
+  <tr><td>Auth</td><td>jose (JWT) + bcryptjs</td><td>5.x / 3.x</td></tr>
+  <tr><td>Styling</td><td>Tailwind CSS</td><td>4.x</td></tr>
+  <tr><td>Components</td><td>shadcn/ui + Recharts</td><td>Latest</td></tr>
+  <tr><td>External API</td><td>Shopify Admin GraphQL</td><td>2024-10</td></tr>
+  <tr><td>Hosting</td><td>Vercel</td><td>Pro</td></tr>
+</table>
+
+<!-- ==================== 3. PROJECT STRUCTURE ==================== -->
+<h2 class="page-break">3. Project Structure</h2>
+
+<div class="file-tree">
+<span class="dir">shopintel/</span>
+├── <span class="file">.env.local</span>                     <span class="comment"># Runtime environment variables</span>
+├── <span class="file">next.config.ts</span>                 <span class="comment"># Security headers</span>
+├── <span class="file">prisma.config.ts</span>               <span class="comment"># Prisma adapter config</span>
+├── <span class="file">tsconfig.json</span>                  <span class="comment"># TypeScript config</span>
+├── <span class="file">postcss.config.mjs</span>             <span class="comment"># Tailwind CSS v4</span>
+├── <span class="file">package.json</span>                   <span class="comment"># Dependencies + scripts</span>
+│
+├── <span class="dir">prisma/</span>
+│   ├── <span class="file">schema.prisma</span>              <span class="comment"># User, Conversation, Message models</span>
+│   └── <span class="dir">migrations/</span>                <span class="comment"># Database migrations</span>
+│
+└── <span class="dir">src/</span>
+    ├── <span class="file">proxy.ts</span>                   <span class="comment"># Auth middleware + security headers</span>
+    │
+    ├── <span class="dir">app/</span>
+    │   ├── <span class="file">layout.tsx</span>             <span class="comment"># Root layout (fonts, metadata)</span>
+    │   ├── <span class="file">page.tsx</span>               <span class="comment"># Dashboard (server component)</span>
+    │   ├── <span class="dir">login/</span>
+    │   │   └── <span class="file">page.tsx</span>           <span class="comment"># Login page with demo buttons</span>
+    │   └── <span class="dir">api/</span>
+    │       ├── <span class="dir">auth/</span>
+    │       │   ├── <span class="file">login/route.ts</span>
+    │       │   ├── <span class="file">logout/route.ts</span>
+    │       │   └── <span class="file">me/route.ts</span>
+    │       ├── <span class="dir">chat/</span>
+    │       │   └── <span class="file">route.ts</span>       <span class="comment"># AI streaming endpoint</span>
+    │       └── <span class="dir">conversations/</span>
+    │           ├── <span class="file">route.ts</span>       <span class="comment"># GET list / POST create</span>
+    │           └── <span class="dir">[id]/</span>
+    │               ├── <span class="file">route.ts</span>   <span class="comment"># GET / DELETE conversation</span>
+    │               └── <span class="dir">messages/</span>
+    │                   └── <span class="file">route.ts</span> <span class="comment"># POST message</span>
+    │
+    ├── <span class="dir">components/</span>
+    │   ├── <span class="file">dashboard.tsx</span>          <span class="comment"># Main dashboard + chat overlay</span>
+    │   ├── <span class="file">vanta-background.tsx</span>   <span class="comment"># Animated Three.js background</span>
+    │   ├── <span class="dir">chat/</span>
+    │   │   ├── <span class="file">chat-interface.tsx</span> <span class="comment"># Full chat with sidebar</span>
+    │   │   └── <span class="file">tool-result-renderer.tsx</span> <span class="comment"># Maps tools to components</span>
+    │   ├── <span class="dir">generative/</span>            <span class="comment"># AI-rendered data components</span>
+    │   │   ├── <span class="file">kpi-cards.tsx</span>
+    │   │   ├── <span class="file">revenue-chart.tsx</span>
+    │   │   ├── <span class="file">top-products-chart.tsx</span>
+    │   │   ├── <span class="file">status-chart.tsx</span>
+    │   │   ├── <span class="file">orders-table.tsx</span>
+    │   │   ├── <span class="file">customer-list.tsx</span>
+    │   │   ├── <span class="file">inventory-table.tsx</span>
+    │   │   ├── <span class="file">product-grid.tsx</span>
+    │   │   ├── <span class="file">liquid-preview.tsx</span>
+    │   │   └── <span class="file">trend-forecast.tsx</span>
+    │   └── <span class="dir">ui/</span>                    <span class="comment"># shadcn/ui primitives</span>
+    │
+    ├── <span class="dir">lib/</span>
+    │   ├── <span class="file">auth.ts</span>               <span class="comment"># JWT + password hashing</span>
+    │   ├── <span class="file">db.ts</span>                 <span class="comment"># Prisma singleton client</span>
+    │   ├── <span class="file">env.ts</span>                <span class="comment"># Zod env validation</span>
+    │   ├── <span class="file">utils.ts</span>              <span class="comment"># cn() class merger</span>
+    │   ├── <span class="dir">hooks/</span>
+    │   │   └── <span class="file">use-persisted-chat.ts</span> <span class="comment"># Chat with DB persistence</span>
+    │   ├── <span class="dir">shopify/</span>
+    │   │   ├── <span class="file">client.ts</span>         <span class="comment"># GraphQL client</span>
+    │   │   ├── <span class="file">queries.ts</span>        <span class="comment"># All Shopify queries</span>
+    │   │   └── <span class="file">types.ts</span>          <span class="comment"># TypeScript interfaces</span>
+    │   └── <span class="dir">ai/</span>
+    │       ├── <span class="file">tools.ts</span>          <span class="comment"># 8 tool definitions</span>
+    │       ├── <span class="file">system-prompt.ts</span>  <span class="comment"># Agent personality + rules</span>
+    │       └── <span class="file">liquid-templates.ts</span> <span class="comment"># Liquid section templates</span>
+    │
+    └── <span class="dir">generated/prisma/</span>         <span class="comment"># Auto-generated Prisma client</span>
+</div>
+
+<!-- ==================== 4. AUTHENTICATION & SECURITY ==================== -->
+<h2 class="page-break">4. Authentication &amp; Security</h2>
+
+<h3>4.1 JWT Authentication</h3>
+<p>Authentication is implemented via JSON Web Tokens (JWT) using the <code>jose</code> library. Sessions are stateless — the JWT contains the full user identity and is signed with <code>HS256</code>.</p>
+
+<h4>Session Lifecycle</h4>
+<ol>
+  <li><strong>Login:</strong> User submits email + password to <code>/api/auth/login</code></li>
+  <li><strong>Verification:</strong> Password checked against bcryptjs hash (or legacy SHA256 with auto-upgrade)</li>
+  <li><strong>Token Creation:</strong> JWT signed with <code>JWT_SECRET</code>, containing <code>{id, email, name, role}</code></li>
+  <li><strong>Cookie:</strong> Token stored as <code>session</code> cookie with security flags</li>
+  <li><strong>Verification:</strong> Every request verified by proxy middleware</li>
+  <li><strong>Expiration:</strong> Tokens expire after 24 hours</li>
+</ol>
+
+<h4>Cookie Configuration</h4>
+<pre><code>{
+  httpOnly: true,       // Not accessible via JavaScript
+  secure: true,         // HTTPS only
+  sameSite: "strict",   // No cross-site sending
+  maxAge: 86400,        // 24 hours
+  path: "/"             // Available site-wide
+}</code></pre>
+
+<h4>Session Interface</h4>
+<pre><code>interface SessionUser {
+  id: string;       // CUID from database
+  email: string;    // User email
+  name: string;     // Display name
+  role: "admin" | "client";
+}</code></pre>
+
+<h3>4.2 Password Hashing</h3>
+<p>Passwords are hashed with <strong>bcryptjs</strong> using 12 salt rounds. The system supports legacy SHA256 hashes and auto-upgrades them on successful login.</p>
+<pre><code>// Hashing (on registration)
+const hash = await bcrypt.hash(password, 12);
+
+// Verification (on login)
+const valid = await bcrypt.compare(password, storedHash);
+
+// Legacy migration: if hash doesn't start with "$2", try SHA256
+// On success, auto-upgrade to bcryptjs hash</code></pre>
+
+<h3>4.3 Middleware &amp; Security Headers</h3>
+<p>File: <code>src/proxy.ts</code> — Next.js 16 proxy middleware that intercepts every request.</p>
+
+<h4>Authentication Flow</h4>
+<pre><code>Request
+  │
+  ├── Is /login or /api/auth/*?  →  ALLOW (public)
+  │
+  ├── Has session cookie?
+  │     No  →  Redirect to /login
+  │     Yes →  Verify JWT
+  │              Invalid →  Delete cookie + redirect
+  │              Valid   →  Apply security headers + proceed
+  │
+  └── Response with security headers</code></pre>
+
+<h4>Security Headers Applied</h4>
+<table>
+  <tr><th>Header</th><th>Value</th><th>Purpose</th></tr>
+  <tr><td>X-Content-Type-Options</td><td>nosniff</td><td>Prevent MIME sniffing</td></tr>
+  <tr><td>X-Frame-Options</td><td>DENY</td><td>Prevent clickjacking</td></tr>
+  <tr><td>X-XSS-Protection</td><td>1; mode=block</td><td>XSS filter</td></tr>
+  <tr><td>Referrer-Policy</td><td>strict-origin-when-cross-origin</td><td>Limit referrer leakage</td></tr>
+  <tr><td>Permissions-Policy</td><td>camera=(), microphone=(), geolocation=()</td><td>Disable device APIs</td></tr>
+  <tr><td>Strict-Transport-Security</td><td>max-age=31536000; includeSubDomains</td><td>Force HTTPS for 1 year</td></tr>
+</table>
+
+<h3>4.4 Rate Limiting</h3>
+<table>
+  <tr><th>Endpoint</th><th>Limit</th><th>Window</th><th>Lockout</th></tr>
+  <tr><td><code>/api/auth/login</code></td><td>5 attempts per email</td><td>15 minutes</td><td>15-minute cooldown</td></tr>
+  <tr><td><code>/api/chat</code></td><td>10 requests per user</td><td>1 minute</td><td>Rate limit response (429)</td></tr>
+</table>
+
+<div class="info-box note">
+  <strong>Note:</strong> Rate limiting uses in-memory Maps. In a multi-instance deployment, consider Redis-backed rate limiting for consistency across instances.
+</div>
+
+<h3>4.5 Role-Based Access Control</h3>
+<table>
+  <tr><th>Feature</th><th><span class="badge badge-indigo">Admin</span></th><th><span class="badge badge-gray">Client</span></th></tr>
+  <tr><td>Dashboard KPIs &amp; Charts</td><td>Yes</td><td>Yes</td></tr>
+  <tr><td>Orders Table</td><td>Yes</td><td>No</td></tr>
+  <tr><td>Customer List</td><td>Yes</td><td>No</td></tr>
+  <tr><td>Inventory Table</td><td>Yes</td><td>No</td></tr>
+  <tr><td>AI Chat Agent</td><td>Yes</td><td>No</td></tr>
+  <tr><td>Liquid Code Generation</td><td>Yes</td><td>No</td></tr>
+  <tr><td>Theme Deployment</td><td>Yes</td><td>No</td></tr>
+  <tr><td>Quick Action Buttons</td><td>Yes</td><td>No</td></tr>
+</table>
+
+<!-- ==================== 5. DATABASE & RAILWAY ==================== -->
+<h2 class="page-break">5. Database &amp; Railway</h2>
+
+<h3>5.1 Schema Design</h3>
+<p>Three models with simple relational structure. Messages cascade-delete when a conversation is removed.</p>
+
+<div class="diagram">
+┌──────────────┐       ┌──────────────────┐       ┌──────────────┐
+│    <span class="highlight">User</span>       │       │  <span class="green">Conversation</span>    │       │   <span class="rose">Message</span>    │
+├──────────────┤       ├──────────────────┤       ├──────────────┤
+│ id      (PK) │──┐    │ id          (PK) │──┐    │ id      (PK) │
+│ email   (UQ) │  │    │ title            │  │    │ role         │
+│ password     │  └───&gt;│ userId      (FK) │  └───&gt;│ conversationId│
+│ name         │       │ createdAt        │       │ content      │
+│ role         │       │ updatedAt        │       │ createdAt    │
+│ createdAt    │       └──────────────────┘       └──────────────┘
+└──────────────┘         1:many                     1:many
+                                                   (cascade delete)
+</div>
+
+<h4>Prisma Schema</h4>
+<pre><code>model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  password      String
+  name          String
+  role          String         @default("client")
+  createdAt     DateTime       @default(now())
+  conversations Conversation[]
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  title     String    @default("New Conversation")
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId],
+                               references: [id], onDelete: Cascade)
+  role           String       // "user" | "assistant"
+  content        String       // JSON-serialized message parts
+  createdAt      DateTime     @default(now())
+}</code></pre>
+
+<h3>5.2 Prisma ORM Configuration</h3>
+<p>Prisma 7.5 with the <code>@prisma/adapter-pg</code> for native PostgreSQL connection pooling. The client is generated to <code>src/generated/prisma/</code> and instantiated as a singleton.</p>
+
+<pre><code>// prisma.config.ts
+import path from "node:path";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { defineConfig } from "prisma/config";
+
+export default defineConfig({
+  earlyAccess: true,
+  schema: path.join(__dirname, "prisma/schema.prisma"),
+  migrate: { adapter: () => new PrismaPg({ connectionString: process.env.DATABASE_URL! }) },
+});
+
+// src/lib/db.ts — Singleton pattern
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+});
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;</code></pre>
+
+<h3>5.3 Railway Configuration</h3>
+<div class="info-box success">
+  <strong>Railway PostgreSQL Instance</strong>
+  <ul>
+    <li><strong>Provider:</strong> Railway (railway.app)</li>
+    <li><strong>Engine:</strong> PostgreSQL 16</li>
+    <li><strong>Connection:</strong> Via proxy URL (<code>ballast.proxy.rlwy.net:24687</code>)</li>
+    <li><strong>Auth:</strong> Username/password in connection string</li>
+    <li><strong>Pooling:</strong> Handled by Prisma PrismaPg adapter</li>
+    <li><strong>Backups:</strong> Railway automatic daily backups</li>
+  </ul>
+</div>
+
+<p><strong>Connection String Format:</strong></p>
+<pre><code>postgresql://&lt;user&gt;:&lt;password&gt;@ballast.proxy.rlwy.net:24687/railway</code></pre>
+
+<div class="info-box warning">
+  <strong>Important:</strong> The DATABASE_URL must be set in both <code>.env.local</code> (local dev) and Vercel environment variables (production). Railway provides the connection string in the dashboard under your PostgreSQL service settings.
+</div>
+
+<!-- ==================== 6. API REFERENCE ==================== -->
+<h2 class="page-break">6. API Reference</h2>
+
+<h3>6.1 Auth Endpoints</h3>
+
+<h4>POST /api/auth/login</h4>
+<table>
+  <tr><th>Field</th><th>Type</th><th>Validation</th></tr>
+  <tr><td>email</td><td>string</td><td>Valid email, max 255 chars</td></tr>
+  <tr><td>password</td><td>string</td><td>Min 1, max 128 chars</td></tr>
+</table>
+<p><strong>Success (200):</strong> <code>{ user: { id, email, name, role } }</code> + sets <code>session</code> cookie</p>
+<p><strong>Errors:</strong> 400 (validation), 401 (invalid credentials), 429 (rate limited)</p>
+
+<h4>POST /api/auth/logout</h4>
+<p><strong>Success (200):</strong> <code>{ ok: true }</code> — Deletes session cookie</p>
+
+<h4>GET /api/auth/me</h4>
+<p><strong>Success (200):</strong> <code>{ user: SessionUser | null }</code></p>
+
+<h3>6.2 Chat Endpoint</h3>
+
+<h4>POST /api/chat</h4>
+<div class="info-box note">
+  <strong>Streaming Response:</strong> This endpoint returns a Server-Sent Events stream via the Vercel AI SDK. It does not return JSON.
+</div>
+<table>
+  <tr><th>Field</th><th>Type</th><th>Constraints</th></tr>
+  <tr><td>messages</td><td>UIMessage[]</td><td>Max 50 messages</td></tr>
+</table>
+<p><strong>Auth:</strong> Required (session cookie)</p>
+<p><strong>Rate Limit:</strong> 10 requests/minute per user</p>
+<p><strong>Max Duration:</strong> 120 seconds</p>
+<p><strong>Model:</strong> gpt-5.4</p>
+<p><strong>Max Tool Steps:</strong> 5 (via <code>stopWhen: stepCountIs(5)</code>)</p>
+
+<h3>6.3 Conversation Endpoints</h3>
+
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
+  <tr><td><span class="badge badge-green">GET</span></td><td>/api/conversations</td><td>Required</td><td>List user's conversations (newest first)</td></tr>
+  <tr><td><span class="badge badge-indigo">POST</span></td><td>/api/conversations</td><td>Required</td><td>Create conversation (body: <code>{ title? }</code>)</td></tr>
+  <tr><td><span class="badge badge-green">GET</span></td><td>/api/conversations/[id]</td><td>Required + Owner</td><td>Get conversation with messages</td></tr>
+  <tr><td><span class="badge badge-red">DELETE</span></td><td>/api/conversations/[id]</td><td>Required + Owner</td><td>Delete conversation (cascades messages)</td></tr>
+  <tr><td><span class="badge badge-indigo">POST</span></td><td>/api/conversations/[id]/messages</td><td>Required + Owner</td><td>Add message (body: <code>{ role, content }</code>)</td></tr>
+</table>
+
+<div class="info-box note">
+  <strong>Ownership Check:</strong> All conversation endpoints verify the conversation belongs to the authenticated user (403 Forbidden if not).
+</div>
+
+<!-- ==================== 7. AI AGENT SYSTEM ==================== -->
+<h2 class="page-break">7. AI Agent System</h2>
+
+<h3>7.1 System Prompt</h3>
+<p>The AI agent is configured as a <strong>sharp, strategic commerce advisor</strong> with specific behavioral rules:</p>
+<ul>
+  <li><strong>Proactive:</strong> Surface anomalies and opportunities unprompted</li>
+  <li><strong>Tool Chaining:</strong> "How's business?" triggers getAnalytics + forecastTrends + getInventory</li>
+  <li><strong>Action-Oriented:</strong> Generate Liquid code AND offer to deploy immediately</li>
+  <li><strong>Predictive:</strong> Always frame data with growth trends and forecasts</li>
+  <li><strong>Concise:</strong> Let the UI components do the heavy lifting — text should be scannable</li>
+</ul>
+
+<h4>Liquid Generation Design Direction</h4>
+<p>When generating Shopify Liquid sections, the AI follows a <strong>luxury clean beauty aesthetic</strong> (Kosas-inspired):</p>
+<ul>
+  <li><strong>Typography:</strong> Founders Grotesk headings, Roboto body, generous letter-spacing</li>
+  <li><strong>Palette:</strong> Black/white primary, dusty rose (#D33167) accent</li>
+  <li><strong>Spacing:</strong> 80-100px vertical padding, 24-32px grid gaps</li>
+  <li><strong>Motion:</strong> Subtle 0.3s transitions, hover scale 1.02-1.05</li>
+  <li><strong>Buttons:</strong> Solid black, uppercase, minimal radius, rose hover</li>
+</ul>
+
+<h3>7.2 Tool Definitions</h3>
+<p>Eight tools are available to the AI agent, defined with Zod schemas for type-safe validation:</p>
+
+<table>
+  <tr><th>Tool</th><th>Purpose</th><th>Key Parameters</th><th>UI Component</th></tr>
+  <tr><td><code>getProducts</code></td><td>Fetch product catalog</td><td>searchQuery?, limit? (1-50)</td><td>ProductGrid</td></tr>
+  <tr><td><code>getOrders</code></td><td>Fetch order history</td><td>searchQuery?, limit? (1-100)</td><td>OrdersTable</td></tr>
+  <tr><td><code>getCustomers</code></td><td>Fetch customer data</td><td>searchQuery?, limit? (1-100)</td><td>CustomerList</td></tr>
+  <tr><td><code>getAnalytics</code></td><td>Compute store metrics</td><td>dateFrom?, dateTo?</td><td>KPICards + Charts</td></tr>
+  <tr><td><code>getInventory</code></td><td>Check stock levels</td><td>lowStockThreshold?, limit?</td><td>InventoryTable</td></tr>
+  <tr><td><code>forecastTrends</code></td><td>Predict growth patterns</td><td>(none)</td><td>TrendForecast</td></tr>
+  <tr><td><code>generateLiquid</code></td><td>Create Shopify section</td><td>componentType, code</td><td>LiquidPreview</td></tr>
+  <tr><td><code>deploySection</code></td><td>Push code to theme</td><td>sectionName, code</td><td>Deploy Alert</td></tr>
+</table>
+
+<h3>7.3 Streaming &amp; Generative UI</h3>
+<p>The chat uses the Vercel AI SDK's streaming protocol. As the model generates text and tool calls, they're streamed to the client as UI message chunks. The <code>ToolResultRenderer</code> component maps each tool's output to the appropriate React component:</p>
+
+<pre><code>// Tool name → Component mapping
+switch (toolName) {
+  case "getProducts":   return &lt;ProductGrid products={result.products} /&gt;
+  case "getOrders":     return &lt;OrdersTable orders={result.orders} /&gt;
+  case "getCustomers":  return &lt;CustomerList customers={result.customers} /&gt;
+  case "getAnalytics":  return &lt;KPICards ... /&gt; + &lt;RevenueChart ... /&gt;
+  case "getInventory":  return &lt;InventoryTable ... /&gt;
+  case "forecastTrends": return &lt;TrendForecast data={result} /&gt;
+  case "generateLiquid": return &lt;LiquidPreview code={result.code} ... /&gt;
+  case "deploySection":  return &lt;DeployAlert ... /&gt;
+}</code></pre>
+
+<!-- ==================== 8. SHOPIFY INTEGRATION ==================== -->
+<h2 class="page-break">8. Shopify Integration</h2>
+
+<h3>8.1 GraphQL Client</h3>
+<p>All Shopify communication uses the <strong>Admin GraphQL API (version 2024-10)</strong> via a lightweight custom client.</p>
+
+<pre><code>// src/lib/shopify/client.ts
+async function shopifyGraphQL&lt;T&gt;(query: string, variables?: Record&lt;string, unknown&gt;): Promise&lt;T&gt;
+
+// Endpoint: https://{SHOPIFY_STORE_URL}/admin/api/2024-10/graphql.json
+// Auth Header: X-Shopify-Access-Token: {SHOPIFY_ACCESS_TOKEN}</code></pre>
+
+<h3>8.2 Query Functions</h3>
+<table>
+  <tr><th>Function</th><th>GraphQL Query</th><th>Data Returned</th></tr>
+  <tr><td><code>getProducts()</code></td><td>products(first: N, query: Q)</td><td>Title, handle, vendor, status, variants (5), featured image, price range, inventory</td></tr>
+  <tr><td><code>getOrders()</code></td><td>orders(first: N, query: Q, sortKey: CREATED_AT)</td><td>Name, dates, financial/fulfillment status, customer, line items, total prices</td></tr>
+  <tr><td><code>getCustomers()</code></td><td>customers(first: N, query: Q)</td><td>Name, email, phone, order count, lifetime spend, address</td></tr>
+  <tr><td><code>getInventory()</code></td><td>products(first: N) with variants</td><td>Per-variant inventory quantities, SKUs, low-stock flags</td></tr>
+</table>
+
+<h3>8.3 Analytics Engine</h3>
+<p>Analytics are computed server-side from raw order data (not Shopify's analytics API):</p>
+<ul>
+  <li><strong>Revenue:</strong> Sum of <code>totalPriceSet.shopMoney.amount</code> across all orders</li>
+  <li><strong>AOV:</strong> Total revenue / order count</li>
+  <li><strong>Top Products:</strong> Aggregated from line items, sorted by revenue (top 10)</li>
+  <li><strong>Revenue Timeline:</strong> Daily aggregation from order <code>createdAt</code></li>
+  <li><strong>Status Breakdown:</strong> Count of orders per <code>displayFulfillmentStatus</code></li>
+</ul>
+
+<h3>8.4 Trend Forecasting</h3>
+<p>The <code>forecastTrends()</code> function provides predictive analytics:</p>
+<ul>
+  <li><strong>WoW Growth:</strong> Compares last 7 days revenue vs prior 7 days</li>
+  <li><strong>MoM Growth:</strong> Compares last 30 days vs prior 30 days</li>
+  <li><strong>Product Trends:</strong> Top 5 growing + top 5 declining products (by revenue change)</li>
+  <li><strong>Anomaly Detection:</strong> Flags daily revenue &gt;2 standard deviations from 30-day mean</li>
+  <li><strong>Statistics:</strong> 30-day mean and standard deviation</li>
+</ul>
+
+<h3>8.5 Theme Deployment</h3>
+<p>The <code>deploySection</code> tool pushes Liquid code directly to the active Shopify theme:</p>
+<ol>
+  <li>Fetches the main theme ID via <code>themes(first:1, roles:MAIN)</code></li>
+  <li>Upserts the file at <code>sections/{sectionName}.liquid</code></li>
+  <li>Returns success status with filename</li>
+</ol>
+
+<div class="info-box warning">
+  <strong>Production Warning:</strong> The deploy tool writes directly to the live theme. In production, consider adding a staging theme workflow or confirmation step before deploying to the main theme.
+</div>
+
+<!-- ==================== 9. FRONTEND & COMPONENTS ==================== -->
+<h2 class="page-break">9. Frontend &amp; Components</h2>
+
+<h3>9.1 Dashboard Layout</h3>
+<p>The main dashboard (<code>src/components/dashboard.tsx</code>) is a server-rendered page that fetches all initial data in parallel, then renders an interactive client component with:</p>
+<ul>
+  <li><strong>Header:</strong> Logo, branding, quick-action suggestion buttons (admin only), user info, logout</li>
+  <li><strong>KPI Section:</strong> 4-column metric cards (revenue, orders, AOV, low stock)</li>
+  <li><strong>Charts Row:</strong> Asymmetric 12-col grid — Revenue (5-col), Top Products (4-col), Status (3-col)</li>
+  <li><strong>Data Tables:</strong> Orders (8-col) + Customers (4-col), admin-only</li>
+  <li><strong>Inventory Table:</strong> Full-width with low-stock highlighting, admin-only</li>
+  <li><strong>Chat Overlay:</strong> Minimizable floating card with AI conversation, admin-only</li>
+  <li><strong>Sticky Input Bar:</strong> Fixed bottom input for AI chat, admin-only</li>
+</ul>
+
+<h3>9.2 Generative UI Components</h3>
+<table>
+  <tr><th>Component</th><th>Renders When</th><th>Features</th></tr>
+  <tr><td>KPICards</td><td>getAnalytics returns</td><td>4 metric cards with formatted currency, animated counters</td></tr>
+  <tr><td>RevenueChart</td><td>getAnalytics returns</td><td>Recharts line chart with custom tooltip, responsive</td></tr>
+  <tr><td>TopProductsChart</td><td>getAnalytics returns</td><td>Recharts bar chart, truncated names with full tooltip</td></tr>
+  <tr><td>StatusChart</td><td>getAnalytics returns</td><td>Recharts pie chart for fulfillment status</td></tr>
+  <tr><td>OrdersTable</td><td>getOrders returns</td><td>Sortable table with status badges, customer info</td></tr>
+  <tr><td>CustomerList</td><td>getCustomers returns</td><td>Sorted by lifetime value, avatar initials</td></tr>
+  <tr><td>InventoryTable</td><td>getInventory returns</td><td>Expandable rows, low-stock red highlighting</td></tr>
+  <tr><td>ProductGrid</td><td>getProducts returns</td><td>Image grid with vendor, price, inventory count</td></tr>
+  <tr><td>LiquidPreview</td><td>generateLiquid returns</td><td>Code view + live iframe preview + copy + deploy</td></tr>
+  <tr><td>TrendForecast</td><td>forecastTrends returns</td><td>Growth metrics, trending products, anomaly flags</td></tr>
+</table>
+
+<h3>9.3 Chat Interface</h3>
+<p>Two chat implementations exist:</p>
+<ol>
+  <li><strong>Dashboard Overlay</strong> (<code>dashboard.tsx</code>) — Floating card on dashboard, minimizable, with sticky input bar</li>
+  <li><strong>Full Chat</strong> (<code>chat/chat-interface.tsx</code>) — Standalone page with conversation sidebar, history management</li>
+</ol>
+<p>Both use the <code>usePersistedChat</code> hook which wraps <code>useChat</code> from the Vercel AI SDK with automatic conversation creation, message persistence to PostgreSQL, and conversation restore on page load.</p>
+
+<h3>9.4 Liquid Preview System</h3>
+<p>The <code>LiquidPreview</code> component renders generated Liquid code in two views:</p>
+<ul>
+  <li><strong>Code Tab:</strong> Full Liquid source with copy button</li>
+  <li><strong>Preview Tab:</strong> Sandboxed iframe with product data injected, rendering the HTML/CSS output</li>
+  <li><strong>Deploy Button:</strong> One-click push to Shopify theme via <code>deploySection</code> tool</li>
+</ul>
+
+<!-- ==================== 10. VERCEL DEPLOYMENT ==================== -->
+<h2 class="page-break">10. Vercel Deployment</h2>
+
+<h3>10.1 Build Pipeline</h3>
+<pre><code># package.json scripts
+{
+  "build": "prisma generate && next build",
+  "postinstall": "prisma generate"
+}
+
+# Build steps on Vercel:
+# 1. npm install (triggers postinstall → prisma generate)
+# 2. npm run build
+#    a. prisma generate  → creates Prisma client in src/generated/prisma/
+#    b. next build       → compiles Next.js (Turbopack)
+# 3. Deploy to Vercel edge network</code></pre>
+
+<h3>10.2 Environment Variables</h3>
+<p>These must be configured in the Vercel dashboard under <strong>Settings → Environment Variables</strong>:</p>
+
+<table>
+  <tr><th>Variable</th><th>Required</th><th>Description</th></tr>
+  <tr><td><code>DATABASE_URL</code></td><td><span class="badge badge-red">Required</span></td><td>PostgreSQL connection string from Railway</td></tr>
+  <tr><td><code>SHOPIFY_STORE_URL</code></td><td><span class="badge badge-red">Required</span></td><td>Store domain (e.g., <code>mystore.myshopify.com</code>)</td></tr>
+  <tr><td><code>SHOPIFY_ACCESS_TOKEN</code></td><td><span class="badge badge-red">Required</span></td><td>Shopify Admin API access token</td></tr>
+  <tr><td><code>OPENAI_API_KEY</code></td><td><span class="badge badge-red">Required</span></td><td>OpenAI API key for GPT-5.4</td></tr>
+  <tr><td><code>JWT_SECRET</code></td><td><span class="badge badge-red">Required</span></td><td>Min 32 chars, used for signing session tokens</td></tr>
+</table>
+
+<div class="info-box danger">
+  <strong>Security:</strong> Never commit <code>.env.local</code> to version control. The <code>.gitignore</code> should exclude all <code>.env*</code> files. Only set secrets through the Vercel dashboard or CLI.
+</div>
+
+<h3>10.3 Runtime Configuration</h3>
+<table>
+  <tr><th>Setting</th><th>Value</th><th>Notes</th></tr>
+  <tr><td>Node.js Version</td><td>18+</td><td>Required for Next.js 16</td></tr>
+  <tr><td>Max Function Duration</td><td>120s</td><td>Set via <code>export const maxDuration = 120</code> in chat route</td></tr>
+  <tr><td>Framework Preset</td><td>Next.js</td><td>Auto-detected by Vercel</td></tr>
+  <tr><td>Build Command</td><td><code>prisma generate && next build</code></td><td>Custom build with Prisma</td></tr>
+  <tr><td>Output Directory</td><td><code>.next</code></td><td>Default Next.js output</td></tr>
+</table>
+
+<!-- ==================== 11. ENV REFERENCE ==================== -->
+<h2 class="page-break">11. Environment Variables Reference</h2>
+
+<table>
+  <tr><th>Variable</th><th>Example Value</th><th>Where Set</th><th>Description</th></tr>
+  <tr>
+    <td><code>DATABASE_URL</code></td>
+    <td><code>postgresql://user:pass@host:port/db</code></td>
+    <td>Railway → Vercel</td>
+    <td>PostgreSQL connection string. Get from Railway dashboard under your Postgres service. Must include username, password, host, port, and database name.</td>
+  </tr>
+  <tr>
+    <td><code>SHOPIFY_STORE_URL</code></td>
+    <td><code>mystore.myshopify.com</code></td>
+    <td>Vercel + .env.local</td>
+    <td>Your Shopify store's myshopify.com domain. Do NOT include <code>https://</code> prefix.</td>
+  </tr>
+  <tr>
+    <td><code>SHOPIFY_ACCESS_TOKEN</code></td>
+    <td><code>shpca_xxxxx</code></td>
+    <td>Vercel + .env.local</td>
+    <td>Shopify Admin API access token. Created in Shopify Partners → Apps → your custom app → API credentials. Requires: read_products, read_orders, read_customers, write_themes scopes.</td>
+  </tr>
+  <tr>
+    <td><code>OPENAI_API_KEY</code></td>
+    <td><code>sk-proj-xxxxx</code></td>
+    <td>Vercel + .env.local</td>
+    <td>OpenAI API key with access to gpt-5.4 model. Get from platform.openai.com → API Keys.</td>
+  </tr>
+  <tr>
+    <td><code>JWT_SECRET</code></td>
+    <td><code>64-char hex string</code></td>
+    <td>Vercel + .env.local</td>
+    <td>Secret for signing JWT session tokens. Generate with: <code>openssl rand -hex 32</code>. Must be at least 32 characters.</td>
+  </tr>
+</table>
+
+<h4>Generating Secrets</h4>
+<pre><code># Generate JWT_SECRET
+openssl rand -hex 32
+# or
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code></pre>
+
+<!-- ==================== 12. DEMO CREDENTIALS ==================== -->
+<h2>12. Demo Credentials &amp; Quick Start</h2>
+
+<h3>Demo Accounts</h3>
+<table>
+  <tr><th>Role</th><th>Email</th><th>Password</th><th>Access Level</th></tr>
+  <tr>
+    <td><span class="badge badge-indigo">Admin</span></td>
+    <td><code>admin@growthcapital.com</code></td>
+    <td><code>growth2026</code></td>
+    <td>Full access: Dashboard, AI Chat, Liquid generation, Deploy, all data</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-gray">Client</span></td>
+    <td><code>client@glowpure.com</code></td>
+    <td><code>glowpure2026</code></td>
+    <td>Read-only: Dashboard KPIs and charts only</td>
+  </tr>
+</table>
+
+<div class="info-box warning">
+  <strong>Demo Only:</strong> These credentials are hardcoded for demonstration purposes. In production, implement a proper user registration flow and remove hardcoded accounts.
+</div>
+
+<h3>Quick Start (Local Development)</h3>
+<pre><code># 1. Clone and install
+git clone https://github.com/magnacollective/shopintel.git
+cd shopintel
+npm install
+
+# 2. Set up environment
+cp .env.example .env.local
+# Edit .env.local with your credentials
+
+# 3. Set up database
+npx prisma generate
+npx prisma db push
+
+# 4. Seed demo users (if needed)
+# Use the login API or create users via Prisma Studio:
+npx prisma studio
+
+# 5. Run development server
+npm run dev
+# Open http://localhost:3000</code></pre>
+
+<h3>Shopify App Scopes Required</h3>
+<p>When creating the Shopify custom app, ensure these <strong>Admin API scopes</strong> are granted:</p>
+<ul>
+  <li><code>read_products</code> — Product catalog access</li>
+  <li><code>read_orders</code> — Order history access</li>
+  <li><code>read_customers</code> — Customer data access</li>
+  <li><code>write_themes</code> — Theme file deployment (for Liquid sections)</li>
+  <li><code>read_inventory</code> — Inventory level access</li>
+</ul>
+
+<hr style="margin-top: 3rem;">
+<p style="text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 2rem;">
+  <strong>ShopIntel</strong> — AI-Powered Shopify Command Center<br>
+  Growth Capital Engineering — March 2026<br>
+  <em>This document is confidential and intended for internal use only.</em>
+</p>
+
+</body>
+</html>
