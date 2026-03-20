@@ -192,7 +192,7 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
                 className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-sm shadow-lg shadow-indigo-500/20 transition-all duration-300 font-display font-medium"
               >
                 <span className="material-symbols-rounded text-base">chat</span>
-                <span>Show AI Chat</span>
+                <span>Show AI Agent</span>
                 {isLoading && (
                   <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                 )}
@@ -202,7 +202,7 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
                 <div className="flex items-center justify-between p-4 pb-2 shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-rounded text-indigo-400 text-lg">auto_awesome</span>
-                    <span className="text-sm font-display font-medium text-zinc-300">AI Assistant</span>
+                    <span className="text-sm font-display font-medium text-zinc-300">AI Agent</span>
                   </div>
                   <button
                     onClick={() => setChatOpen(false)}

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { tool } from "ai";
-import { getProducts, getOrders, getCustomers, getAnalytics, getInventory } from "../shopify/queries";
+import { getProducts, getOrders, getCustomers, getAnalytics, getInventory, pushSectionToTheme, forecastTrends } from "../shopify/queries";
 import { generateLiquidCode } from "./liquid-templates";
 
 export const shopifyTools = {
@@ -148,6 +148,39 @@ export const shopifyTools = {
         componentType: params.componentType,
         previewProducts,
       };
+    },
+  }),
+
+  deploySection: tool({
+    description:
+      "Deploy a Liquid section file directly to the active Shopify theme. Use this when the user wants to push, deploy, or publish a generated section to their live store theme.",
+    inputSchema: z.object({
+      sectionName: z
+        .string()
+        .max(50)
+        .regex(/^[a-z0-9-]+$/, "Must be kebab-case (lowercase letters, numbers, and hyphens only)")
+        .describe("The kebab-case filename for the section (e.g. 'featured-hero', 'product-grid')"),
+      code: z
+        .string()
+        .max(50000)
+        .describe("The Liquid code content to deploy as the section file"),
+    }),
+    execute: async (params) => {
+      const result = await pushSectionToTheme({
+        filename: params.sectionName,
+        content: params.code,
+      });
+      return result;
+    },
+  }),
+
+  forecastTrends: tool({
+    description:
+      "Analyze sales trends, predict growth patterns, identify rising/declining products, and flag revenue anomalies. Use this proactively when discussing business performance or when the user asks about trends, forecasts, or predictions.",
+    inputSchema: z.object({}),
+    execute: async () => {
+      const trends = await forecastTrends();
+      return trends;
     },
   }),
 };

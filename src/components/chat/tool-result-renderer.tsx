@@ -8,6 +8,7 @@ import { OrdersTable } from "@/components/generative/orders-table";
 import { CustomerList } from "@/components/generative/customer-list";
 import { InventoryTable } from "@/components/generative/inventory-table";
 import { LiquidPreview } from "@/components/generative/liquid-preview";
+import { TrendForecast } from "@/components/generative/trend-forecast";
 
 interface ToolResultRendererProps {
   toolName: string;
@@ -91,6 +92,54 @@ export function ToolResultRenderer({ toolName, result }: ToolResultRendererProps
           code={data.code}
           componentType={data.componentType}
           previewProducts={data.previewProducts}
+        />
+      );
+    }
+
+    case "deploySection": {
+      const data = result as { success: boolean; filename: string; error?: string };
+      return (
+        <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm ${
+          data.success
+            ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+            : "border-red-500/20 bg-red-500/10 text-red-300"
+        }`}>
+          <span className="material-symbols-rounded text-lg">
+            {data.success ? "check_circle" : "error"}
+          </span>
+          <div>
+            <p className="font-medium">
+              {data.success ? "Deployed successfully" : "Deploy failed"}
+            </p>
+            <p className="text-xs opacity-70">
+              {data.success ? data.filename : data.error}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    case "forecastTrends": {
+      const data = result as {
+        currency: string;
+        weekOverWeekGrowth: number | null;
+        monthOverMonthGrowth: number | null;
+        thisWeekRevenue: number;
+        lastWeekRevenue: number;
+        topGrowingProducts: { title: string; growthPct: number; recentRevenue: number }[];
+        decliningProducts: { title: string; growthPct: number; recentRevenue: number }[];
+        anomalies: { date: string; revenue: number; type: "spike" | "dip"; deviations: number }[];
+      };
+      return (
+        <TrendForecast
+          weekOverWeekGrowth={data.weekOverWeekGrowth}
+          monthOverMonthGrowth={data.monthOverMonthGrowth}
+          thisWeekRevenue={data.thisWeekRevenue}
+          lastWeekRevenue={data.lastWeekRevenue}
+          currency={data.currency}
+          topGrowingProducts={data.topGrowingProducts}
+          decliningProducts={data.decliningProducts}
+          anomalies={data.anomalies}
         />
       );
     }

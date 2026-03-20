@@ -49,11 +49,13 @@ export function StatusChart({ data, title }: StatusChartProps) {
               <Tooltip
                 contentStyle={{
                   borderRadius: "8px",
-                  border: "1px solid var(--border)",
+                  border: "1px solid rgba(255,255,255,0.1)",
                   fontSize: "12px",
-                  backgroundColor: "hsl(var(--card))",
+                  backgroundColor: "#111",
+                  color: "#fff",
                 }}
-                formatter={(value) => [`${Number(value)} orders`, ""]}
+                itemStyle={{ color: "#fff" }}
+                formatter={(value, name) => [`${Number(value)} orders`, name]}
               />
               <Legend
                 verticalAlign="bottom"
