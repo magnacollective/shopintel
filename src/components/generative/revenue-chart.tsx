@@ -58,12 +58,25 @@ export function RevenueChart({ data, currency }: RevenueChartProps) {
                 width={70}
               />
               <Tooltip
-                formatter={(value) => [formatCurrency(Number(value)), "Revenue"]}
-                labelFormatter={(label) => formatDate(String(label))}
-                contentStyle={{
-                  borderRadius: "8px",
-                  border: "1px solid var(--border)",
-                  fontSize: "12px",
+                content={({ active, payload, label }) => {
+                  if (!active || !payload?.length) return null;
+                  return (
+                    <div style={{
+                      backgroundColor: "#111",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      borderRadius: "8px",
+                      padding: "8px 14px",
+                      fontSize: "12px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+                    }}>
+                      <p style={{ color: "#fff", fontWeight: 600, marginBottom: 4 }}>
+                        {formatDate(String(label))}
+                      </p>
+                      <p style={{ color: "#ccc", margin: 0 }}>
+                        Revenue: {formatCurrency(Number(payload[0].value))}
+                      </p>
+                    </div>
+                  );
                 }}
               />
               <Area

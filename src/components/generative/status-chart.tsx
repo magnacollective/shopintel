@@ -47,18 +47,27 @@ export function StatusChart({ data, title }: StatusChartProps) {
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{
-                  borderRadius: "8px",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  fontSize: "12px",
-                  backgroundColor: "#111",
-                  color: "#fff",
-                  padding: "8px 12px",
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const item = payload[0];
+                  return (
+                    <div style={{
+                      backgroundColor: "#111",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      borderRadius: "8px",
+                      padding: "8px 14px",
+                      fontSize: "12px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+                    }}>
+                      <p style={{ color: "#fff", fontWeight: 600, marginBottom: 4 }}>
+                        {item.name}
+                      </p>
+                      <p style={{ color: "#ccc", margin: 0 }}>
+                        {Number(item.value)} orders
+                      </p>
+                    </div>
+                  );
                 }}
-                wrapperStyle={{ outline: "none" }}
-                itemStyle={{ color: "#fff" }}
-                labelStyle={{ color: "#fff", fontWeight: 600 }}
-                formatter={(value, name) => [`${Number(value)} orders`, name]}
               />
               <Legend
                 verticalAlign="bottom"

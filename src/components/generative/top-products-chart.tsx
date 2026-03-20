@@ -24,10 +24,11 @@ export function TopProductsChart({ data, currency }: TopProductsChartProps) {
       minimumFractionDigits: 0,
     }).format(value);
 
-  // Truncate long product names
+  // Truncate long product names for axis labels
   const chartData = data.map((d) => ({
     ...d,
     name: d.title.length > 25 ? d.title.slice(0, 22) + "..." : d.title,
+    fullTitle: d.title,
   }));
 
   return (
@@ -56,25 +57,30 @@ export function TopProductsChart({ data, currency }: TopProductsChartProps) {
                 tick={{ fontSize: 11 }}
               />
               <Tooltip
-                formatter={(value, name) => [
-                  name === "revenue" ? formatCurrency(Number(value)) : value,
-                  name === "revenue" ? "Revenue" : "Units Sold",
-                ]}
-                labelFormatter={(label) => {
-                  const item = data.find(
-                    (d) => d.title === label || d.title.startsWith(String(label).replace("...", ""))
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const item = payload[0].payload;
+                  return (
+                    <div style={{
+                      backgroundColor: "#111",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      borderRadius: "8px",
+                      padding: "10px 14px",
+                      fontSize: "12px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+                    }}>
+                      <p style={{ color: "#fff", fontWeight: 600, marginBottom: 6 }}>
+                        {item.fullTitle}
+                      </p>
+                      <p style={{ color: "#ccc", margin: "2px 0" }}>
+                        Revenue: {formatCurrency(item.revenue)}
+                      </p>
+                      <p style={{ color: "#ccc", margin: "2px 0" }}>
+                        Units Sold: {item.quantity}
+                      </p>
+                    </div>
                   );
-                  return item?.title || label;
                 }}
-                contentStyle={{
-                  borderRadius: "8px",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  fontSize: "12px",
-                  backgroundColor: "#111",
-                  color: "#fff",
-                }}
-                labelStyle={{ color: "#fff", fontWeight: 600, marginBottom: 4 }}
-                itemStyle={{ color: "#ccc" }}
               />
               <Bar dataKey="revenue" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
             </BarChart>
