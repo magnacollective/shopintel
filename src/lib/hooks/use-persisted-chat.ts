@@ -16,15 +16,19 @@ export function usePersistedChat() {
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>([]);
   const [chatKey, setChatKey] = useState(0); // force remount useChat on conversation switch
   const savingRef = useRef(false);
+  // Track conversation ID in a ref so we can update it without re-rendering useChat
+  const convIdRef = useRef<string | null>(null);
+  convIdRef.current = activeConversationId;
 
   const chat = useChat({
-    id: activeConversationId ?? undefined,
+    // Use chatKey as the stable ID — only changes on explicit conversation switch
+    id: `chat-${chatKey}`,
     messages: initialMessages.length > 0 ? initialMessages : undefined,
     onFinish: async ({ message }) => {
-      if (!activeConversationId || savingRef.current) return;
+      if (!convIdRef.current || savingRef.current) return;
       savingRef.current = true;
       try {
-        await saveMessage(activeConversationId, "assistant", JSON.stringify(message.parts));
+        await saveMessage(convIdRef.current, "assistant", JSON.stringify(message.parts));
       } finally {
         savingRef.current = false;
       }
@@ -166,25 +170,29 @@ export function usePersistedChat() {
   // Prevent double-click race conditions
   const sendingRef = useRef(false);
 
-  // Wrap sendMessage to auto-create conversation and save user message
+  // Wrap sendMessage: fire AI request FIRST, persist conversation in background
   const sendMessage = useCallback(async (opts: { text: string }) => {
     if (sendingRef.current) return;
     sendingRef.current = true;
 
     try {
-      let convId = activeConversationId;
-
-      // Auto-create conversation on first message
-      if (!convId) {
-        const title = opts.text.slice(0, 60) + (opts.text.length > 60 ? "..." : "");
-        convId = await createConversation(title);
-        if (!convId) return;
-        setActiveConversationId(convId);
-      }
-
-      // Send to AI immediately, persist in background
+      // Fire AI request immediately — no blocking
       chat.sendMessage(opts);
-      saveMessage(convId, "user", JSON.stringify([{ type: "text", text: opts.text }]));
+
+      // Persist conversation in background (doesn't affect the AI stream)
+      const convId = activeConversationId;
+      if (convId) {
+        saveMessage(convId, "user", JSON.stringify([{ type: "text", text: opts.text }]));
+      } else {
+        // First message — create conversation after AI is already running
+        const title = opts.text.slice(0, 60) + (opts.text.length > 60 ? "..." : "");
+        createConversation(title).then((newId) => {
+          if (newId) {
+            setActiveConversationId(newId);
+            saveMessage(newId, "user", JSON.stringify([{ type: "text", text: opts.text }]));
+          }
+        });
+      }
     } finally {
       sendingRef.current = false;
     }
