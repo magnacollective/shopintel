@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { useChat } from "@ai-sdk/react";
+import { useState, useRef, useEffect } from "react";
 import { getToolName } from "ai";
 import DOMPurify from "dompurify";
 import type { Product, Order, Customer } from "@/lib/shopify/types";
@@ -14,6 +13,7 @@ import { OrdersTable } from "@/components/generative/orders-table";
 import { CustomerList } from "@/components/generative/customer-list";
 import { InventoryTable } from "@/components/generative/inventory-table";
 import { ToolResultRenderer } from "@/components/chat/tool-result-renderer";
+import { usePersistedChat } from "@/lib/hooks/use-persisted-chat";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -66,65 +66,26 @@ interface DashboardProps {
 
 export function Dashboard({ analytics, products, orders, customers, inventoryData, user }: DashboardProps) {
   const isAdmin = user.role === "admin";
-  const conversationIdRef = useRef<string | null>(null);
-  const savingRef = useRef(false);
 
-  const { messages, sendMessage: rawSendMessage, status } = useChat({
-    onFinish: async ({ message }) => {
-      if (!conversationIdRef.current || savingRef.current) return;
-      savingRef.current = true;
-      try {
-        await fetch(`/api/conversations/${conversationIdRef.current}/messages`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ role: "assistant", content: JSON.stringify(message.parts) }),
-        });
-      } finally {
-        savingRef.current = false;
-      }
-    },
-  });
+  const { messages, sendMessage, status, chatKey } = usePersistedChat();
 
   const [input, setInput] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const isLoading = status === "submitted" || status === "streaming";
 
+  // Auto-open chat overlay if restored messages exist
+  useEffect(() => {
+    if (messages.length > 0 && !chatOpen) {
+      setChatOpen(true);
+    }
+  }, [messages.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (chatOpen && chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
   }, [messages, isLoading, chatOpen]);
-
-  const sendMessage = useCallback(async (opts: { text: string }) => {
-    // Auto-create conversation if needed
-    if (!conversationIdRef.current) {
-      try {
-        const res = await fetch("/api/conversations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: opts.text.slice(0, 60) }),
-        });
-        if (res.ok) {
-          const conv = await res.json();
-          conversationIdRef.current = conv.id;
-        }
-      } catch { /* continue without persistence */ }
-    }
-
-    // Save user message
-    if (conversationIdRef.current) {
-      try {
-        await fetch(`/api/conversations/${conversationIdRef.current}/messages`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ role: "user", content: JSON.stringify([{ type: "text", text: opts.text }]) }),
-        });
-      } catch { /* continue */ }
-    }
-
-    rawSendMessage(opts);
-  }, [rawSendMessage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

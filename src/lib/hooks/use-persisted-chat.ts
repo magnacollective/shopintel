@@ -31,9 +31,43 @@ export function usePersistedChat() {
     },
   });
 
-  // Load conversation list on mount
+  // Load conversation list on mount and auto-restore the most recent one
+  const restoredRef = useRef(false);
   useEffect(() => {
-    loadConversations();
+    (async () => {
+      try {
+        const res = await fetch("/api/conversations");
+        if (res.ok) {
+          const data = await res.json();
+          setConversations(data);
+          // Auto-load the most recent conversation if it has messages
+          if (!restoredRef.current && data.length > 0) {
+            restoredRef.current = true;
+            const latest = data[0]; // already sorted by updatedAt desc
+            const convRes = await fetch(`/api/conversations/${latest.id}`);
+            if (convRes.ok) {
+              const convData = await convRes.json();
+              if (convData.messages?.length > 0) {
+                const msgs: UIMessage[] = convData.messages.map((m: { id: string; role: string; content: string }) => {
+                  let parts: UIMessage["parts"];
+                  try {
+                    parts = JSON.parse(m.content);
+                  } catch {
+                    parts = [{ type: "text" as const, text: m.content }];
+                  }
+                  return { id: m.id, role: m.role as "user" | "assistant", parts };
+                });
+                setActiveConversationId(latest.id);
+                setInitialMessages(msgs);
+                setChatKey((k) => k + 1);
+              }
+            }
+          }
+        }
+      } catch {
+        // silently fail
+      }
+    })();
   }, []);
 
   const loadConversations = useCallback(async () => {
