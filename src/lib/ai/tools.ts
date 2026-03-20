@@ -296,41 +296,38 @@ export const shopifyTools = {
         .describe("The complete Shopify Liquid section. Must include HTML, a {% style %} block with all CSS, and a {% schema %} block with settings and presets. This is the ONLY field for code."),
     }),
     execute: async (params) => {
-      // Pull real product images from the store for authentic-looking previews
+      // Pull real products from the store
       const storeProducts = await getProducts({ limit: 8 });
-      const storeImages = storeProducts
-        .map((p) => p.featuredImage?.url)
-        .filter((url): url is string => !!url);
 
-      // Use curated placeholder data with real store images for clean previews
-      const placeholderProducts = [
-        { title: "Luminous Glow Serum", vendor: "HAUS LABS", price: "48.00", compare: "62.00", type: "Skincare", handle: "luminous-glow-serum" },
-        { title: "Velvet Matte Lipstick", vendor: "WESTMAN ATELIER", price: "38.00", compare: null, type: "Makeup", handle: "velvet-matte-lipstick" },
-        { title: "Hydra-Plump Moisturizer", vendor: "TATCHA", price: "65.00", compare: "78.00", type: "Skincare", handle: "hydra-plump-moisturizer" },
-        { title: "Rose Gold Highlighter", vendor: "RMS BEAUTY", price: "42.00", compare: null, type: "Makeup", handle: "rose-gold-highlighter" },
-        { title: "Overnight Recovery Oil", vendor: "DRUNK ELEPHANT", price: "72.00", compare: "88.00", type: "Skincare", handle: "overnight-recovery-oil" },
-        { title: "Clean Silk Foundation", vendor: "ILIA", price: "54.00", compare: null, type: "Makeup", handle: "clean-silk-foundation" },
-        { title: "Vitamin C Brightening Drops", vendor: "BIOSSANCE", price: "39.00", compare: null, type: "Skincare", handle: "vitamin-c-drops" },
-        { title: "Crystal Clear Setting Spray", vendor: "KOSAS", price: "28.00", compare: "34.00", type: "Makeup", handle: "crystal-clear-spray" },
-      ];
+      // Use real store data — sanitize so preview always looks clean
+      const previewProducts = storeProducts.map((p) => {
+        const price = parseFloat(p.priceRangeV2.minVariantPrice.amount);
+        const maxPrice = parseFloat(p.priceRangeV2.maxVariantPrice.amount);
+        const hasCompare = maxPrice > price;
 
-      const previewProducts = placeholderProducts.map((p, i) => ({
-        title: p.title,
-        price: p.price,
-        compare_at_price: p.compare,
-        currency: "USD",
-        image: storeImages[i] || storeImages[0] || "https://placehold.co/400x533/f5f5f0/999?text=Product",
-        image_alt: p.title,
-        images: [storeImages[i] || storeImages[0] || ""],
-        vendor: p.vendor,
-        handle: p.handle,
-        description: `Premium ${p.type.toLowerCase()} for your daily routine.`,
-        product_type: p.type,
-        tags: [p.type, "Clean Beauty", "Bestseller"],
-        available: true,
-        total_inventory: 50,
-        variants: [{ title: "Default", price: p.price, sku: null, available: true }],
-      }));
+        return {
+          title: p.title,
+          price: price > 0 ? p.priceRangeV2.minVariantPrice.amount : "29.00",
+          compare_at_price: hasCompare ? p.priceRangeV2.maxVariantPrice.amount : null,
+          currency: p.priceRangeV2.minVariantPrice.currencyCode || "USD",
+          image: p.featuredImage?.url || "https://placehold.co/400x533/f5f5f0/999?text=Product",
+          image_alt: p.featuredImage?.altText || p.title,
+          images: p.images.nodes.length > 0 ? p.images.nodes.map((img) => img.url) : [p.featuredImage?.url || ""],
+          vendor: p.vendor || "ShopIntel",
+          handle: p.handle,
+          description: p.description || "",
+          product_type: p.productType || "",
+          tags: p.tags || [],
+          available: true, // always show as available in preview
+          total_inventory: Math.max(p.totalInventory, 10), // never show low stock in preview
+          variants: p.variants.nodes.map((v) => ({
+            title: v.title,
+            price: parseFloat(v.price) > 0 ? v.price : "29.00",
+            sku: v.sku,
+            available: true,
+          })),
+        };
+      });
 
       // Render preview HTML using the real Liquid engine with product data
       const previewHtml = await renderLiquidPreview(params.liquidCode, previewProducts);
