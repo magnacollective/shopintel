@@ -4,15 +4,17 @@ import { getSession } from "@/lib/auth";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { id } = await params;
+
   const conversation = await prisma.conversation.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!conversation) {
@@ -34,14 +36,14 @@ export async function POST(
 
   const message = await prisma.message.create({
     data: {
-      conversationId: params.id,
+      conversationId: id,
       role: body.role,
       content: body.content,
     },
   });
 
   await prisma.conversation.update({
-    where: { id: params.id },
+    where: { id },
     data: { updatedAt: new Date() },
   });
 

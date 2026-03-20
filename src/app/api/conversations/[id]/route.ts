@@ -4,15 +4,17 @@ import { getSession } from "@/lib/auth";
 
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { id } = await params;
+
   const conversation = await prisma.conversation.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { messages: { orderBy: { createdAt: "asc" } } },
   });
 
@@ -29,15 +31,17 @@ export async function GET(
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { id } = await params;
+
   const conversation = await prisma.conversation.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!conversation) {
@@ -48,7 +52,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  await prisma.conversation.delete({ where: { id: params.id } });
+  await prisma.conversation.delete({ where: { id } });
 
   return NextResponse.json({ success: true });
 }

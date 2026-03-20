@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const jwtSecret = process.env.JWT_SECRET;
-if (!jwtSecret) {
-  throw new Error("JWT_SECRET environment variable is required");
+function getSecret() {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET environment variable is required");
+  }
+  return new TextEncoder().encode(jwtSecret);
 }
-const SECRET = new TextEncoder().encode(jwtSecret);
 
 const SECURITY_HEADERS = {
   "X-Content-Type-Options": "nosniff",
@@ -17,7 +19,7 @@ const SECURITY_HEADERS = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow login page and auth API routes
@@ -33,7 +35,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    await jwtVerify(token, SECRET);
+    await jwtVerify(token, getSecret());
     const response = NextResponse.next();
     applySecurityHeaders(response);
     return response;
