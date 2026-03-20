@@ -284,15 +284,67 @@ function buildPreviewHtml(componentType: string, products: PreviewProduct[]): st
 
     default:
       return wrapHtml(`
+  <style>
+    @keyframes csFadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    .cs-anim { animation: csFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) forwards; opacity: 0; }
+  </style>
+  <section style="min-height:420px;background:#000;display:flex;align-items:center;justify-content:center;text-align:center;padding:60px 24px;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a1a1a 0%,#0d0d0d 100%)"></div>
+    <div style="position:relative;z-index:2;max-width:600px" class="cs-anim" >
+      <span style="display:inline-block;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.2em;color:#D33167;margin-bottom:20px;padding:6px 16px;border:1px solid #D33167">New Collection</span>
+      <h1 style="font-family:'Roboto Condensed',sans-serif;font-size:52px;font-weight:700;color:#fff;line-height:0.95;margin:0 0 20px;letter-spacing:-0.02em">Effortless Beauty</h1>
+      <p style="font-size:16px;color:rgba(255,255,255,0.65);margin:0 0 36px;line-height:1.6;font-weight:300">Clean, clinically-proven formulas that do more for your skin</p>
+      <a href="#" style="display:inline-block;padding:14px 44px;background:#fff;color:#000;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;text-decoration:none;transition:background 0.3s,color 0.3s" onmouseover="this.style.background='#D33167';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#000'">Shop Now</a>
+    </div>
+  </section>
   <section style="padding:72px 32px;background:#fff">
     <div style="max-width:1000px;margin:0 auto">
-      <span style="display:block;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.14em;color:#D33167;text-align:center;margin-bottom:10px">Custom Section</span>
-      <h2 style="font-family:'Roboto Condensed',sans-serif;font-size:36px;font-weight:700;text-align:center;margin:0 0 8px;color:#000;letter-spacing:-0.01em;line-height:1.05">Your Collection</h2>
-      <p style="text-align:center;color:rgba(0,0,0,0.55);margin:0 0 48px;font-size:15px;font-weight:400">Preview with your store products</p>
+      <div style="text-align:center;margin-bottom:48px" class="cs-anim" style="animation-delay:200ms">
+        <h2 style="font-family:'Roboto Condensed',sans-serif;font-size:36px;font-weight:700;margin:0 0 8px;color:#000;letter-spacing:-0.01em;line-height:1.05">Bestsellers</h2>
+        <p style="color:rgba(0,0,0,0.55);margin:0;font-size:15px;font-weight:400">The essentials your routine has been missing</p>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(${Math.min(products.length, 4)},1fr);gap:28px">
-        ${productCards}
+        ${products.map((p, i) => `
+        <article class="cs-anim" style="animation-delay:${300 + i * 100}ms;position:relative">
+          <a href="#" style="text-decoration:none;color:inherit;display:block">
+            <div style="overflow:hidden;background:#f5f5f0;margin-bottom:14px;position:relative">
+              ${p.image ? `<img src="${p.image}" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block;transition:transform 0.6s cubic-bezier(0.22,1,0.36,1)" alt="${p.title}" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">` : '<div style="width:100%;aspect-ratio:3/4;background:#f5f5f0;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,0.25);font-size:13px">No image</div>'}
+              <div style="position:absolute;bottom:12px;right:12px;opacity:0;transform:translateY(8px);transition:opacity 0.3s,transform 0.3s" class="qa-btn-wrap">
+                <button style="width:40px;height:40px;border-radius:50%;background:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.15);font-size:18px;color:#000;transition:background 0.3s,color 0.3s" onmouseover="this.style.background='#D33167';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#000'">+</button>
+              </div>
+            </div>
+            <div>
+              <span style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:rgba(0,0,0,0.55);margin-bottom:4px;font-weight:500">${p.vendor}</span>
+              <h3 style="font-size:14px;font-weight:600;margin:0 0 6px;color:#000;line-height:1.3">${p.title}</h3>
+              <span style="font-size:14px;font-weight:600;color:#000">${formatPrice(p.price, p.currency)}</span>
+            </div>
+          </a>
+          <button style="display:inline-block;margin-top:10px;padding:0 0 2px;border:none;background:none;color:#000;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;border-bottom:1px solid #000;transition:color 0.3s,border-color 0.3s" onmouseover="this.style.color='#D33167';this.style.borderColor='#D33167'" onmouseout="this.style.color='#000';this.style.borderColor='#000'">Add to Bag</button>
+        </article>`).join("")}
       </div>
     </div>
-  </section>`);
+  </section>
+  <section style="background:#FAFAF7;padding:0">
+    <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;min-height:400px" class="cs-anim" style="animation-delay:800ms">
+      <div style="display:flex;flex-direction:column;justify-content:center;padding:72px 64px">
+        <span style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.18em;color:#D33167;margin-bottom:16px">Limited Edition</span>
+        <h2 style="font-family:'Roboto Condensed',sans-serif;font-size:36px;font-weight:700;margin:0 0 16px;color:#000;letter-spacing:-0.01em;line-height:1.05">The Edit</h2>
+        <p style="font-size:15px;color:rgba(0,0,0,0.55);margin:0 0 32px;line-height:1.6;font-weight:400">Curated essentials for your daily routine.</p>
+        <a href="#" style="display:inline-block;padding:14px 36px;background:transparent;color:#000;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;text-decoration:none;border:1px solid #000;transition:background 0.3s,color 0.3s;align-self:flex-start" onmouseover="this.style.background='#000';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#000'">Discover</a>
+      </div>
+      <div style="overflow:hidden;background:#eee">
+        ${products[0]?.image ? `<img src="${products[0].image}" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.6s ease" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">` : '<div style="width:100%;height:100%;background:#e5e5e0;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,0.25)">Image</div>'}
+      </div>
+    </div>
+  </section>
+  <script>
+    document.querySelectorAll('article').forEach(function(card) {
+      var wrap = card.querySelector('.qa-btn-wrap');
+      if (wrap) {
+        card.addEventListener('mouseenter', function() { wrap.style.opacity='1'; wrap.style.transform='translateY(0)'; });
+        card.addEventListener('mouseleave', function() { wrap.style.opacity='0'; wrap.style.transform='translateY(8px)'; });
+      }
+    });
+  </script>`);
   }
 }

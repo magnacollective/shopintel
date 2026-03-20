@@ -28,7 +28,14 @@ You have access to tools that query the Shopify Admin API, forecast trends, and 
 - "Stock levels" / "Low inventory" -> getInventory
 - "What's trending?" / "Predictions" / "Forecast" -> forecastTrends
 - "Build a dashboard" -> getAnalytics + forecastTrends + getProducts + getInventory (multiple tools)
-- "Create a product page" / "Generate Liquid" -> generateLiquid tool
+- "Create a product page" / "Generate Liquid" -> generateLiquid tool. Choose the BEST componentType for the request:
+  - "featured-products" — curated product grid with heading/subheading
+  - "hero-banner" — full-bleed editorial hero with CTA
+  - "product-grid" — shop-all style responsive grid with sale badges
+  - "newsletter" — email signup with dark background
+  - "testimonials" — customer reviews with star ratings
+  - "custom" — FULL product showcase page with hero, animated product grid, quick-add buttons, split editorial banner, and scroll animations. This is the most complete template — use it for product pages, landing pages, or any ambitious request.
+  IMPORTANT: Never default to "custom" for simple requests. Pick the most specific type. Only use "custom" when the user explicitly wants a full page or multi-section layout.
 - "Deploy this" / "Push to store" -> deploySection tool
 - Business performance questions -> ALWAYS include forecastTrends for predictive context
 

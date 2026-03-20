@@ -654,52 +654,470 @@ export function generateLiquidCode(componentType: string, description?: string):
 
     default:
       return `{% comment %}
-  Custom Section
-  ${description || "Custom Shopify section — luxury clean beauty aesthetic"}
+  Custom Product Showcase Section
+  ${description || "Animated product showcase — luxury clean beauty aesthetic"}
 {% endcomment %}
 
-<section class="custom-section" data-section-id="{{ section.id }}">
-  <div class="custom-section__inner">
-    <h2 class="custom-section__heading">{{ section.settings.heading }}</h2>
-    <div class="custom-section__content rte">
-      {{ section.settings.content }}
+<section class="cs-section" data-section-id="{{ section.id }}">
+  {%- if section.settings.show_hero -%}
+    <div class="cs-hero">
+      <div class="cs-hero__media">
+        {% if section.settings.hero_image %}
+          {{ section.settings.hero_image | image_url: width: 1920 | image_tag:
+            loading: 'eager',
+            class: 'cs-hero__img',
+            fetchpriority: 'high'
+          }}
+        {% endif %}
+        <div class="cs-hero__overlay"></div>
+      </div>
+      <div class="cs-hero__content cs-animate cs-animate--fade-up">
+        {% if section.settings.label != blank %}
+          <span class="cs-hero__label">{{ section.settings.label }}</span>
+        {% endif %}
+        <h1 class="cs-hero__heading">{{ section.settings.heading }}</h1>
+        {% if section.settings.subheading != blank %}
+          <p class="cs-hero__subheading">{{ section.settings.subheading }}</p>
+        {% endif %}
+        {% if section.settings.cta_text != blank %}
+          <a href="{{ section.settings.cta_link }}" class="cs-btn">{{ section.settings.cta_text }}</a>
+        {% endif %}
+      </div>
+    </div>
+  {%- endif -%}
+
+  <div class="cs-products">
+    <div class="cs-products__inner">
+      {% if section.settings.grid_heading != blank %}
+        <div class="cs-products__header cs-animate cs-animate--fade-up">
+          <h2 class="cs-products__heading">{{ section.settings.grid_heading }}</h2>
+          {% if section.settings.grid_subheading != blank %}
+            <p class="cs-products__subheading">{{ section.settings.grid_subheading }}</p>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="cs-grid">
+        {% for product in collections[section.settings.collection].products limit: section.settings.product_count %}
+          <article class="cs-card cs-animate cs-animate--fade-up" style="--delay: {{ forloop.index0 | times: 100 }}ms">
+            <a href="{{ product.url }}" class="cs-card__link">
+              <div class="cs-card__media">
+                {% if product.featured_image %}
+                  {{ product.featured_image | image_url: width: 640 | image_tag:
+                    loading: 'lazy',
+                    class: 'cs-card__img'
+                  }}
+                {% else %}
+                  {{ 'product-1' | placeholder_svg_tag: 'cs-card__placeholder' }}
+                {% endif %}
+                {% if product.available == false %}
+                  <span class="cs-card__badge cs-card__badge--soldout">Sold Out</span>
+                {% elsif product.compare_at_price > product.price %}
+                  <span class="cs-card__badge cs-card__badge--sale">Sale</span>
+                {% endif %}
+                <div class="cs-card__quick-add">
+                  {% if product.available %}
+                    <button type="button" class="cs-card__add-btn" aria-label="Quick add {{ product.title }}">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="cs-card__info">
+                <span class="cs-card__vendor">{{ product.vendor }}</span>
+                <h3 class="cs-card__title">{{ product.title }}</h3>
+                <div class="cs-card__pricing">
+                  <span class="cs-card__price {% if product.compare_at_price > product.price %}cs-card__price--sale{% endif %}">{{ product.price | money }}</span>
+                  {% if product.compare_at_price > product.price %}
+                    <s class="cs-card__compare">{{ product.compare_at_price | money }}</s>
+                  {% endif %}
+                </div>
+              </div>
+            </a>
+            <button class="cs-card__atc" type="button" data-product-id="{{ product.id }}">
+              {% if product.available %}Add to Bag{% else %}Notify Me{% endif %}
+            </button>
+          </article>
+        {% endfor %}
+      </div>
     </div>
   </div>
+
+  {% if section.settings.show_banner %}
+    <div class="cs-banner cs-animate cs-animate--fade-up">
+      <div class="cs-banner__inner">
+        <div class="cs-banner__text">
+          <span class="cs-banner__label">{{ section.settings.banner_label | default: 'Limited Edition' }}</span>
+          <h2 class="cs-banner__heading">{{ section.settings.banner_heading | default: 'The Edit' }}</h2>
+          <p class="cs-banner__body">{{ section.settings.banner_body | default: 'Curated essentials for your daily routine.' }}</p>
+          {% if section.settings.banner_cta != blank %}
+            <a href="{{ section.settings.banner_link }}" class="cs-btn cs-btn--outline">{{ section.settings.banner_cta }}</a>
+          {% endif %}
+        </div>
+        {% if section.settings.banner_image %}
+          <div class="cs-banner__media">
+            {{ section.settings.banner_image | image_url: width: 800 | image_tag:
+              loading: 'lazy',
+              class: 'cs-banner__img'
+            }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
 </section>
 
+<script>
+  (function() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('cs-animate--visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.cs-animate').forEach(el => observer.observe(el));
+  })();
+</script>
+
 {% style %}
-  .custom-section {
-    padding: 88px 0;
-    background: #fff;
+  .cs-section {
+    --cs-accent: {{ section.settings.accent_color | default: '#D33167' }};
+    --cs-text: #000;
+    --cs-muted: rgba(0,0,0,0.55);
+    --cs-light: rgba(0,0,0,0.08);
   }
-  .custom-section__inner {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0 24px;
+
+  /* Animations */
+  .cs-animate {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--delay, 0ms);
   }
-  .custom-section__heading {
+  .cs-animate--visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Hero */
+  .cs-hero {
+    position: relative;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #000;
+  }
+  .cs-hero__media { position: absolute; inset: 0; }
+  .cs-hero__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 8s ease;
+  }
+  .cs-hero:hover .cs-hero__img { transform: scale(1.03); }
+  .cs-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.55));
+  }
+  .cs-hero__content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 640px;
+    padding: 48px 24px;
+  }
+  .cs-hero__label {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--cs-accent);
+    margin-bottom: 20px;
+    padding: 6px 16px;
+    border: 1px solid var(--cs-accent);
+  }
+  .cs-hero__heading {
     font-family: 'Founders Grotesk', 'Roboto Condensed', sans-serif;
-    font-size: 2.25rem;
+    font-size: 4.5rem;
     font-weight: 700;
-    margin: 0 0 32px;
+    color: #fff;
+    line-height: 0.95;
+    margin: 0 0 20px;
+    letter-spacing: -0.02em;
+  }
+  .cs-hero__subheading {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.7);
+    margin: 0 0 36px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* Buttons */
+  .cs-btn {
+    display: inline-block;
+    padding: 14px 44px;
+    background: #fff;
     color: #000;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
+  }
+  .cs-btn:hover {
+    background: var(--cs-accent);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  .cs-btn--outline {
+    background: transparent;
+    color: #000;
+    border: 1px solid #000;
+  }
+  .cs-btn--outline:hover {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+  }
+
+  /* Product Grid */
+  .cs-products { padding: 96px 0; background: #fff; }
+  .cs-products__inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .cs-products__header { text-align: center; margin-bottom: 56px; }
+  .cs-products__heading {
+    font-family: 'Founders Grotesk', 'Roboto Condensed', sans-serif;
+    font-size: 2.75rem;
+    font-weight: 700;
+    line-height: 1.05;
+    margin: 0 0 12px;
+    color: var(--cs-text);
     letter-spacing: -0.01em;
   }
-  .custom-section__content {
+  .cs-products__subheading {
+    color: var(--cs-muted);
     font-size: 1rem;
-    line-height: 1.7;
-    color: rgba(0,0,0,0.7);
+    margin: 0;
+    font-weight: 400;
+  }
+  .cs-grid {
+    display: grid;
+    grid-template-columns: repeat({{ section.settings.columns | default: 4 }}, 1fr);
+    gap: 28px;
+  }
+
+  /* Product Cards */
+  .cs-card { position: relative; }
+  .cs-card__link { text-decoration: none; color: inherit; display: block; }
+  .cs-card__media {
+    position: relative;
+    overflow: hidden;
+    background: #f5f5f0;
+    margin-bottom: 16px;
+  }
+  .cs-card__img {
+    width: 100%;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .cs-card__link:hover .cs-card__img { transform: scale(1.05); }
+  .cs-card__placeholder {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: #f5f5f0;
+  }
+  .cs-card__badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    padding: 4px 12px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    z-index: 2;
+  }
+  .cs-card__badge--sale { background: var(--cs-accent); color: #fff; }
+  .cs-card__badge--soldout { background: #000; color: #fff; }
+  .cs-card__quick-add {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .cs-card:hover .cs-card__quick-add {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .cs-card__add-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+    color: #000;
+  }
+  .cs-card__add-btn:hover {
+    background: var(--cs-accent);
+    color: #fff;
+    transform: scale(1.08);
+  }
+  .cs-card__vendor {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--cs-muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .cs-card__title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--cs-text);
+    line-height: 1.3;
+  }
+  .cs-card__pricing { display: flex; align-items: center; gap: 8px; }
+  .cs-card__price { font-size: 0.9rem; font-weight: 600; color: var(--cs-text); }
+  .cs-card__price--sale { color: var(--cs-accent); }
+  .cs-card__compare { font-size: 0.85rem; color: var(--cs-muted); font-weight: 400; }
+  .cs-card__atc {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 0 0 2px;
+    border: none;
+    background: none;
+    color: var(--cs-text);
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border-bottom: 1px solid var(--cs-text);
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+  .cs-card__atc:hover {
+    color: var(--cs-accent);
+    border-color: var(--cs-accent);
+  }
+
+  /* Split Banner */
+  .cs-banner { padding: 0; background: #FAFAF7; }
+  .cs-banner__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 480px;
+  }
+  .cs-banner__text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 72px 64px;
+  }
+  .cs-banner__label {
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--cs-accent);
+    margin-bottom: 16px;
+  }
+  .cs-banner__heading {
+    font-family: 'Founders Grotesk', 'Roboto Condensed', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 16px;
+    color: var(--cs-text);
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+  }
+  .cs-banner__body {
+    font-size: 1rem;
+    color: var(--cs-muted);
+    margin: 0 0 32px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+  .cs-banner__media { overflow: hidden; }
+  .cs-banner__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+  }
+  .cs-banner:hover .cs-banner__img { transform: scale(1.03); }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .cs-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .cs-hero { min-height: 60vh; }
+    .cs-hero__heading { font-size: 2.5rem; }
+    .cs-hero__subheading { font-size: 0.95rem; }
+    .cs-products { padding: 64px 0; }
+    .cs-products__heading { font-size: 2rem; }
+    .cs-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .cs-banner__inner { grid-template-columns: 1fr; }
+    .cs-banner__text { padding: 48px 24px; }
+    .cs-banner__media { min-height: 320px; }
   }
 {% endstyle %}
 
 {% schema %}
 {
-  "name": "Custom Section",
+  "name": "Product Showcase",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Custom Section" },
-    { "type": "richtext", "id": "content", "label": "Content" }
+    { "type": "header", "content": "Accent Color" },
+    { "type": "color", "id": "accent_color", "label": "Accent Color", "default": "#D33167" },
+    { "type": "header", "content": "Hero Section" },
+    { "type": "checkbox", "id": "show_hero", "label": "Show Hero", "default": true },
+    { "type": "image_picker", "id": "hero_image", "label": "Hero Background" },
+    { "type": "text", "id": "label", "label": "Top Label", "default": "New Collection" },
+    { "type": "text", "id": "heading", "label": "Hero Heading", "default": "Effortless Beauty" },
+    { "type": "textarea", "id": "subheading", "label": "Hero Subheading", "default": "Clean, clinically-proven formulas that do more for your skin" },
+    { "type": "text", "id": "cta_text", "label": "CTA Text", "default": "Shop Now" },
+    { "type": "url", "id": "cta_link", "label": "CTA Link" },
+    { "type": "header", "content": "Product Grid" },
+    { "type": "text", "id": "grid_heading", "label": "Grid Heading", "default": "Bestsellers" },
+    { "type": "text", "id": "grid_subheading", "label": "Grid Subheading", "default": "The essentials your routine has been missing" },
+    { "type": "collection", "id": "collection", "label": "Collection" },
+    { "type": "range", "id": "product_count", "min": 2, "max": 12, "step": 1, "default": 8, "label": "Products" },
+    { "type": "range", "id": "columns", "min": 2, "max": 4, "step": 1, "default": 4, "label": "Columns" },
+    { "type": "header", "content": "Split Banner" },
+    { "type": "checkbox", "id": "show_banner", "label": "Show Banner", "default": true },
+    { "type": "text", "id": "banner_label", "label": "Banner Label", "default": "Limited Edition" },
+    { "type": "text", "id": "banner_heading", "label": "Banner Heading", "default": "The Edit" },
+    { "type": "textarea", "id": "banner_body", "label": "Banner Body", "default": "Curated essentials for your daily routine." },
+    { "type": "text", "id": "banner_cta", "label": "Banner CTA Text", "default": "Discover" },
+    { "type": "url", "id": "banner_link", "label": "Banner CTA Link" },
+    { "type": "image_picker", "id": "banner_image", "label": "Banner Image" }
   ],
-  "presets": [{ "name": "Custom Section" }]
+  "presets": [{ "name": "Product Showcase" }]
 }
 {% endschema %}`;
   }
