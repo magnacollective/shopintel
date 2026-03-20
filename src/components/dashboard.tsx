@@ -96,10 +96,10 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
     <VantaBackground>
       <div className="min-h-screen text-white noise-overlay">
         {/* Header */}
-        <header className="sticky top-0 z-50 border-b border-white/[0.06] backdrop-blur-2xl bg-[#0b0f14]/80">
+        <header className="sticky top-0 z-50 border-b border-white/[0.06] backdrop-blur-2xl bg-[#0b0f14]/70">
           <div className="max-w-[1400px] mx-auto px-6 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/15">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/15">
                 <span className="material-symbols-rounded text-white text-xl">auto_awesome</span>
               </div>
               <div>
@@ -112,14 +112,14 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
                 <button
                   key={prompt}
                   onClick={() => handleSuggestion(prompt)}
-                  className="hidden lg:block text-xs px-3 py-1.5 rounded-lg border border-white/[0.06] text-zinc-500 hover:text-emerald-400 hover:border-emerald-500/20 hover:bg-emerald-500/[0.04] transition-all duration-300 font-display"
+                  className="hidden lg:block text-xs px-3 py-1.5 rounded-lg border border-white/[0.06] text-zinc-500 hover:text-indigo-400 hover:border-indigo-500/20 hover:bg-indigo-500/[0.04] transition-all duration-300 font-display"
                 >
                   {prompt}
                 </button>
               ))}
               <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/[0.06]">
                 <span className="text-xs text-zinc-500 hidden sm:block font-display">{user.name}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium font-display ${isAdmin ? "bg-emerald-500/15 text-emerald-400" : "bg-zinc-700/50 text-zinc-400"}`}>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium font-display ${isAdmin ? "bg-indigo-500/15 text-indigo-400" : "bg-zinc-700/50 text-zinc-400"}`}>
                   {isAdmin ? "Admin" : "Client"}
                 </span>
                 <button
@@ -189,7 +189,7 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
             {!chatOpen ? (
               <button
                 onClick={() => setChatOpen(true)}
-                className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-sm shadow-lg shadow-emerald-500/20 transition-all duration-300 font-display font-medium"
+                className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-sm shadow-lg shadow-indigo-500/20 transition-all duration-300 font-display font-medium"
               >
                 <span className="material-symbols-rounded text-base">chat</span>
                 <span>Show AI Chat</span>
@@ -201,7 +201,7 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
               <Card className="w-full max-w-2xl max-h-[60vh] flex flex-col bg-[#0f1318]/95 backdrop-blur-2xl border-white/[0.08] shadow-2xl shadow-black/50 pointer-events-auto rounded-2xl">
                 <div className="flex items-center justify-between p-4 pb-2 shrink-0">
                   <div className="flex items-center gap-2">
-                    <span className="material-symbols-rounded text-emerald-400 text-lg">auto_awesome</span>
+                    <span className="material-symbols-rounded text-indigo-400 text-lg">auto_awesome</span>
                     <span className="text-sm font-display font-medium text-zinc-300">AI Assistant</span>
                   </div>
                   <button
@@ -217,9 +217,9 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
                   ))}
                   {isLoading && messages[messages.length - 1]?.role === "user" && (
                     <div className="flex items-center gap-1.5 py-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
                   )}
                 </div>
@@ -229,14 +229,14 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
         )}
 
         {/* Sticky AI Input Bar (admin only) */}
-        {isAdmin && <div className="fixed bottom-0 inset-x-0 z-50 border-t border-white/[0.06] bg-[#0b0f14]/85 backdrop-blur-2xl">
+        {isAdmin && <div className="fixed bottom-0 inset-x-0 z-50 border-t border-white/[0.06] bg-[#0b0f14]/70 backdrop-blur-2xl">
           <form onSubmit={handleSubmit} className="max-w-2xl mx-auto px-6 py-3 relative">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask the AI anything about your store..."
               className="pr-12 h-11 rounded-xl bg-white/[0.04] border-white/[0.08]
-                focus:border-emerald-500/40 focus:ring-emerald-500/15
+                focus:border-indigo-500/40 focus:ring-indigo-500/15
                 placeholder:text-zinc-600 transition-all duration-300 text-sm"
               disabled={isLoading}
             />
@@ -245,9 +245,9 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
               disabled={isLoading || !input.trim()}
               size="icon"
               className="absolute right-7.5 top-4 h-8 w-8 rounded-lg
-                bg-gradient-to-r from-emerald-500 to-teal-500
-                hover:from-emerald-400 hover:to-teal-400
-                shadow-lg shadow-emerald-500/20
+                bg-gradient-to-r from-indigo-500 to-purple-600
+                hover:from-indigo-400 hover:to-purple-500
+                shadow-lg shadow-indigo-500/20
                 disabled:opacity-30 disabled:shadow-none
                 transition-all duration-300"
             >
@@ -264,7 +264,7 @@ function MessageBubble({ message }: { message: UIMessage }) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl rounded-br-sm text-sm max-w-[80%]">
+        <div className="px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl rounded-br-sm text-sm max-w-[80%]">
           {message.parts
             .filter((p): p is { type: "text"; text: string } => p.type === "text")
             .map((p) => p.text)
@@ -311,7 +311,7 @@ function MessageBubble({ message }: { message: UIMessage }) {
 
           return (
             <div key={idx} className="flex items-center gap-2 text-xs text-zinc-500 py-1">
-              <div className="h-3.5 w-3.5 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
+              <div className="h-3.5 w-3.5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
               <span>Fetching {toolName}...</span>
             </div>
           );
@@ -330,7 +330,7 @@ function formatMarkdown(text: string): string {
     )
     .replace(
       /`([^`]+)`/g,
-      '<code class="bg-emerald-500/10 text-emerald-300 px-1.5 py-0.5 rounded text-xs">$1</code>'
+      '<code class="bg-indigo-500/10 text-indigo-300 px-1.5 py-0.5 rounded text-xs">$1</code>'
     )
     .replace(/\*\*([^*]+)\*\*/g, "<strong class='text-white font-semibold'>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>")
