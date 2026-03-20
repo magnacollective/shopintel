@@ -63,7 +63,7 @@ export function VantaBackground({ children }: { children: React.ReactNode }) {
       <div className="relative min-h-screen w-full">
         <div
           ref={vantaRef}
-          className="fixed inset-0 w-full h-full opacity-50"
+          className="fixed inset-0 w-full h-full"
           style={{ zIndex: 0 }}
         />
         <div className="relative z-10">{children}</div>
