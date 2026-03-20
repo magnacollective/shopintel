@@ -1,6 +1,10 @@
 const SHOPIFY_STORE_URL = process.env.SHOPIFY_STORE_URL!;
 const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN!;
 
+if (!process.env.SHOPIFY_STORE_URL || !process.env.SHOPIFY_ACCESS_TOKEN) {
+  throw new Error("SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN environment variables are required");
+}
+
 export async function shopifyGraphQL<T = unknown>(
   query: string,
   variables?: Record<string, unknown>
@@ -17,7 +21,7 @@ export async function shopifyGraphQL<T = unknown>(
   });
 
   if (!response.ok) {
-    throw new Error(`Shopify API error: ${response.status} ${response.statusText}`);
+    throw new Error(`Shopify API error: ${response.status}`);
   }
 
   const json = await response.json();

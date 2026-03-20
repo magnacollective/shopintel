@@ -10,10 +10,13 @@ export const shopifyTools = {
     inputSchema: z.object({
       searchQuery: z
         .string()
+        .max(200)
         .optional()
         .describe("Optional Shopify search query to filter products (e.g. 'title:shirt', 'vendor:Nike', 'product_type:shoes')"),
       limit: z
         .number()
+        .min(1)
+        .max(50)
         .optional()
         .describe("Number of products to fetch (default 20, max 50)"),
     }),
@@ -29,10 +32,13 @@ export const shopifyTools = {
     inputSchema: z.object({
       searchQuery: z
         .string()
+        .max(200)
         .optional()
         .describe("Optional Shopify search query (e.g. 'financial_status:paid', 'fulfillment_status:unfulfilled', 'created_at:>2024-01-01')"),
       limit: z
         .number()
+        .min(1)
+        .max(100)
         .optional()
         .describe("Number of orders to fetch (default 25, max 100)"),
     }),
@@ -48,10 +54,13 @@ export const shopifyTools = {
     inputSchema: z.object({
       searchQuery: z
         .string()
+        .max(200)
         .optional()
         .describe("Optional Shopify search query to filter customers (e.g. 'orders_count:>5', 'total_spent:>100')"),
       limit: z
         .number()
+        .min(1)
+        .max(100)
         .optional()
         .describe("Number of customers to fetch (default 25, max 100)"),
     }),
@@ -67,10 +76,12 @@ export const shopifyTools = {
     inputSchema: z.object({
       dateFrom: z
         .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format")
         .optional()
         .describe("Start date for analytics period (ISO format, e.g. '2024-01-01')"),
       dateTo: z
         .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format")
         .optional()
         .describe("End date for analytics period (ISO format, e.g. '2024-12-31')"),
     }),
@@ -86,10 +97,14 @@ export const shopifyTools = {
     inputSchema: z.object({
       lowStockThreshold: z
         .number()
+        .min(0)
+        .max(1000)
         .optional()
         .describe("Threshold below which items are considered low stock (default 10)"),
       limit: z
         .number()
+        .min(1)
+        .max(100)
         .optional()
         .describe("Number of products to check (default 50)"),
     }),

@@ -2,12 +2,13 @@
 
 import { useChat } from "@ai-sdk/react";
 import { getToolName } from "ai";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ToolResultRenderer } from "./tool-result-renderer";
 import { ArrowUp } from "lucide-react";
+import DOMPurify from "dompurify";
 import type { UIMessage } from "ai";
 
 const SUGGESTED_PROMPTS = [
@@ -218,7 +219,7 @@ function MessageBubble({ message, index }: { message: UIMessage; index: number }
 }
 
 function formatMarkdown(text: string): string {
-  return text
+  const html = text
     .replace(
       /```(\w+)?\n([\s\S]*?)```/g,
       '<pre class="bg-zinc-900 text-zinc-100 rounded-xl p-4 overflow-x-auto text-xs my-3 border border-border/50"><code>$2</code></pre>'
@@ -230,4 +231,9 @@ function formatMarkdown(text: string): string {
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>")
     .replace(/\n/g, "<br />");
+
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ["strong", "em", "br", "pre", "code", "p", "span"],
+    ALLOWED_ATTR: ["class"],
+  });
 }

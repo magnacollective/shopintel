@@ -107,7 +107,7 @@ export function LiquidPreview({ code, componentType, previewProducts }: LiquidPr
               srcDoc={previewHtml}
               className="w-full bg-white"
               style={{ height: "480px", border: "none" }}
-              sandbox="allow-same-origin"
+              sandbox=""
               title="Liquid section preview"
             />
           </div>

@@ -1,10 +1,12 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { createHash } from "crypto";
+import bcrypt from "bcryptjs";
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "shopintel-jwt-secret-2026-change-in-production"
-);
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) {
+  throw new Error("JWT_SECRET environment variable is required");
+}
+const SECRET = new TextEncoder().encode(jwtSecret);
 
 export interface SessionUser {
   id: string;
@@ -13,10 +15,12 @@ export interface SessionUser {
   role: "admin" | "client";
 }
 
-export function hashPassword(password: string): string {
-  return createHash("sha256")
-    .update(password + "shopintel-salt-2026")
-    .digest("hex");
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12);
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
 }
 
 export async function createSession(user: SessionUser): Promise<string> {
@@ -27,15 +31,15 @@ export async function createSession(user: SessionUser): Promise<string> {
     role: user.role,
   })
     .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("7d")
+    .setExpirationTime("24h")
     .sign(SECRET);
 
   const cookieStore = await cookies();
   cookieStore.set("session", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7,
+    secure: true,
+    sameSite: "strict",
+    maxAge: 60 * 60 * 24,
     path: "/",
   });
 

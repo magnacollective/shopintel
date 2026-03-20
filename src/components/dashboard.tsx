@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
 import { getToolName } from "ai";
+import DOMPurify from "dompurify";
 import type { Product, Order, Customer } from "@/lib/shopify/types";
 import { VantaBackground } from "@/components/vanta-background";
 import { KPICards } from "@/components/generative/kpi-cards";
@@ -93,17 +94,17 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
 
   return (
     <VantaBackground>
-      <div className="min-h-screen text-white">
+      <div className="min-h-screen text-white noise-overlay">
         {/* Header */}
-        <header className="sticky top-0 z-50 border-b border-white/5 backdrop-blur-xl bg-black/60">
+        <header className="sticky top-0 z-50 border-b border-white/[0.06] backdrop-blur-2xl bg-[#0b0f14]/80">
           <div className="max-w-[1400px] mx-auto px-6 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/15">
                 <span className="material-symbols-rounded text-white text-xl">auto_awesome</span>
               </div>
               <div>
-                <h1 className="text-sm font-bold leading-none tracking-tight">ShopIntel</h1>
-                <p className="text-[11px] text-zinc-400 mt-0.5">AI-Powered Shopify Command Center</p>
+                <h1 className="text-sm font-display font-bold leading-none tracking-tight">ShopIntel</h1>
+                <p className="text-[11px] text-zinc-500 mt-0.5">Command Center</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -111,19 +112,19 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
                 <button
                   key={prompt}
                   onClick={() => handleSuggestion(prompt)}
-                  className="hidden lg:block text-xs px-3 py-1.5 rounded-lg border border-white/10 text-zinc-400 hover:text-white hover:border-indigo-500/30 hover:bg-white/5 transition-all"
+                  className="hidden lg:block text-xs px-3 py-1.5 rounded-lg border border-white/[0.06] text-zinc-500 hover:text-emerald-400 hover:border-emerald-500/20 hover:bg-emerald-500/[0.04] transition-all duration-300 font-display"
                 >
                   {prompt}
                 </button>
               ))}
-              <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/10">
-                <span className="text-xs text-zinc-400 hidden sm:block">{user.name}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${isAdmin ? "bg-indigo-500/20 text-indigo-300" : "bg-zinc-700 text-zinc-400"}`}>
+              <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/[0.06]">
+                <span className="text-xs text-zinc-500 hidden sm:block font-display">{user.name}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium font-display ${isAdmin ? "bg-emerald-500/15 text-emerald-400" : "bg-zinc-700/50 text-zinc-400"}`}>
                   {isAdmin ? "Admin" : "Client"}
                 </span>
                 <button
                   onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login"; }}
-                  className="text-zinc-500 hover:text-white transition-colors p-1"
+                  className="text-zinc-600 hover:text-white transition-colors p-1"
                   title="Sign out"
                 >
                   <span className="material-symbols-rounded text-base">logout</span>
@@ -133,7 +134,7 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
           </div>
         </header>
 
-        <main className="max-w-[1400px] mx-auto px-6 py-6 space-y-6 pb-24">
+        <main className="max-w-[1400px] mx-auto px-6 py-8 space-y-8 pb-28">
           {/* KPIs */}
           <section className="animate-fade-in-up">
             <KPICards
@@ -145,26 +146,26 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
             />
           </section>
 
-          {/* Charts Row - 3 columns */}
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up stagger-2">
-            <div className="lg:col-span-1">
+          {/* Charts Row - asymmetric layout */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up stagger-2">
+            <div className="lg:col-span-5">
               <RevenueChart data={analytics.revenueTimeline} currency={analytics.currency} />
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-4">
               <TopProductsChart data={analytics.topProducts} currency={analytics.currency} />
             </div>
-            <div className="lg:col-span-1">
-              <StatusChart data={analytics.statusBreakdown} title="Order Fulfillment Status" />
+            <div className="lg:col-span-3">
+              <StatusChart data={analytics.statusBreakdown} title="Fulfillment" />
             </div>
           </section>
 
           {/* Orders & Customers Row */}
           {isAdmin && (
-            <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up stagger-3">
-              <div className="lg:col-span-2">
+            <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up stagger-3">
+              <div className="lg:col-span-8">
                 <OrdersTable orders={orders} />
               </div>
-              <div>
+              <div className="lg:col-span-4">
                 <CustomerList customers={customers} />
               </div>
             </section>
@@ -188,7 +189,7 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
             {!chatOpen ? (
               <button
                 onClick={() => setChatOpen(true)}
-                className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm shadow-lg shadow-indigo-500/25 transition-all"
+                className="pointer-events-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-sm shadow-lg shadow-emerald-500/20 transition-all duration-300 font-display font-medium"
               >
                 <span className="material-symbols-rounded text-base">chat</span>
                 <span>Show AI Chat</span>
@@ -197,15 +198,15 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
                 )}
               </button>
             ) : (
-              <Card className="w-full max-w-2xl max-h-[60vh] flex flex-col bg-zinc-900/95 backdrop-blur-xl border-white/10 shadow-2xl shadow-black/50 pointer-events-auto rounded-2xl">
+              <Card className="w-full max-w-2xl max-h-[60vh] flex flex-col bg-[#0f1318]/95 backdrop-blur-2xl border-white/[0.08] shadow-2xl shadow-black/50 pointer-events-auto rounded-2xl">
                 <div className="flex items-center justify-between p-4 pb-2 shrink-0">
                   <div className="flex items-center gap-2">
-                    <span className="material-symbols-rounded text-indigo-400 text-lg">auto_awesome</span>
-                    <span className="text-sm font-medium text-zinc-300">AI Assistant</span>
+                    <span className="material-symbols-rounded text-emerald-400 text-lg">auto_awesome</span>
+                    <span className="text-sm font-display font-medium text-zinc-300">AI Assistant</span>
                   </div>
                   <button
                     onClick={() => setChatOpen(false)}
-                    className="text-zinc-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
+                    className="text-zinc-600 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
                   >
                     <span className="material-symbols-rounded text-lg">keyboard_arrow_down</span>
                   </button>
@@ -216,9 +217,9 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
                   ))}
                   {isLoading && messages[messages.length - 1]?.role === "user" && (
                     <div className="flex items-center gap-1.5 py-2">
-                      <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
                   )}
                 </div>
@@ -228,15 +229,15 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
         )}
 
         {/* Sticky AI Input Bar (admin only) */}
-        {isAdmin && <div className="fixed bottom-0 inset-x-0 z-50 border-t border-white/5 bg-black/80 backdrop-blur-xl">
+        {isAdmin && <div className="fixed bottom-0 inset-x-0 z-50 border-t border-white/[0.06] bg-[#0b0f14]/85 backdrop-blur-2xl">
           <form onSubmit={handleSubmit} className="max-w-2xl mx-auto px-6 py-3 relative">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask the AI anything about your store..."
-              className="pr-12 h-11 rounded-xl bg-zinc-800/80 border-white/10
-                focus:border-indigo-500/50 focus:ring-indigo-500/20
-                placeholder:text-zinc-500 transition-all text-sm"
+              className="pr-12 h-11 rounded-xl bg-white/[0.04] border-white/[0.08]
+                focus:border-emerald-500/40 focus:ring-emerald-500/15
+                placeholder:text-zinc-600 transition-all duration-300 text-sm"
               disabled={isLoading}
             />
             <Button
@@ -244,11 +245,11 @@ export function Dashboard({ analytics, products, orders, customers, inventoryDat
               disabled={isLoading || !input.trim()}
               size="icon"
               className="absolute right-7.5 top-4 h-8 w-8 rounded-lg
-                bg-gradient-to-r from-indigo-500 to-purple-600
-                hover:from-indigo-600 hover:to-purple-700
-                shadow-lg shadow-indigo-500/25
+                bg-gradient-to-r from-emerald-500 to-teal-500
+                hover:from-emerald-400 hover:to-teal-400
+                shadow-lg shadow-emerald-500/20
                 disabled:opacity-30 disabled:shadow-none
-                transition-all duration-200"
+                transition-all duration-300"
             >
               <ArrowUp className="h-4 w-4" />
             </Button>
@@ -263,7 +264,7 @@ function MessageBubble({ message }: { message: UIMessage }) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="px-3.5 py-2 bg-indigo-600 text-white rounded-xl rounded-br-sm text-sm max-w-[80%]">
+        <div className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl rounded-br-sm text-sm max-w-[80%]">
           {message.parts
             .filter((p): p is { type: "text"; text: string } => p.type === "text")
             .map((p) => p.text)
@@ -309,8 +310,8 @@ function MessageBubble({ message }: { message: UIMessage }) {
           }
 
           return (
-            <div key={idx} className="flex items-center gap-2 text-xs text-zinc-400 py-1">
-              <div className="h-3.5 w-3.5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+            <div key={idx} className="flex items-center gap-2 text-xs text-zinc-500 py-1">
+              <div className="h-3.5 w-3.5 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
               <span>Fetching {toolName}...</span>
             </div>
           );
@@ -322,16 +323,21 @@ function MessageBubble({ message }: { message: UIMessage }) {
 }
 
 function formatMarkdown(text: string): string {
-  return text
+  const html = text
     .replace(
       /```(\w+)?\n([\s\S]*?)```/g,
-      '<pre class="bg-zinc-800 rounded-lg p-3 overflow-x-auto text-xs my-2 border border-white/5"><code>$2</code></pre>'
+      '<pre class="bg-white/[0.03] rounded-lg p-3 overflow-x-auto text-xs my-2 border border-white/[0.06]"><code>$2</code></pre>'
     )
     .replace(
       /`([^`]+)`/g,
-      '<code class="bg-indigo-500/10 text-indigo-300 px-1.5 py-0.5 rounded text-xs">$1</code>'
+      '<code class="bg-emerald-500/10 text-emerald-300 px-1.5 py-0.5 rounded text-xs">$1</code>'
     )
-    .replace(/\*\*([^*]+)\*\*/g, "<strong class='text-white'>$1</strong>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong class='text-white font-semibold'>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>")
     .replace(/\n/g, "<br />");
+
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ["strong", "em", "br", "pre", "code", "p", "span"],
+    ALLOWED_ATTR: ["class"],
+  });
 }

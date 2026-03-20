@@ -40,61 +40,75 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden">
-      {/* Animated background orbs */}
+    <div className="min-h-screen flex items-center justify-center bg-[#0b0f14] relative overflow-hidden noise-overlay">
+      {/* Gradient mesh background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl animate-float-slow" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-float-slow-reverse" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-3xl" />
+        {/* Primary emerald orb - top left */}
+        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-emerald-500/15 rounded-full blur-[120px] animate-float-slow" />
+        {/* Teal orb - bottom right */}
+        <div className="absolute -bottom-48 -right-32 w-[400px] h-[400px] bg-teal-500/10 rounded-full blur-[100px] animate-float-slow-reverse" />
+        {/* Amber accent orb - subtle warmth */}
+        <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] bg-amber-500/5 rounded-full blur-[80px] animate-float-diagonal" />
       </div>
 
-      {/* Grid pattern overlay */}
+      {/* Geometric grid pattern */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        className="absolute inset-0 pointer-events-none opacity-[0.04]"
         style={{
-          backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
+          backgroundImage:
+            "linear-gradient(rgba(16,185,129,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.3) 1px, transparent 1px)",
+          backgroundSize: "80px 80px",
         }}
       />
 
-      <div className="relative z-10 w-full max-w-md px-6">
-        {/* Logo */}
-        <div className="text-center mb-10 animate-fade-in-up">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-2xl shadow-indigo-500/25 mb-6 animate-pulse-glow">
-            <span className="material-symbols-rounded text-white text-3xl">auto_awesome</span>
+      {/* Diagonal decorative line */}
+      <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-transparent via-emerald-500/20 to-transparent transform rotate-12 translate-x-[-200px] pointer-events-none" />
+
+      <div className="relative z-10 w-full max-w-[420px] px-6">
+        {/* Logo & Brand */}
+        <div className="mb-12 animate-fade-in-up">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-2xl shadow-emerald-500/25 animate-pulse-glow">
+              <span className="material-symbols-rounded text-white text-2xl">auto_awesome</span>
+            </div>
+            <div>
+              <h1 className="text-2xl font-display font-bold tracking-tight text-white">ShopIntel</h1>
+              <p className="text-[13px] text-zinc-500 tracking-wide">Command Center</p>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">ShopIntel</h1>
-          <p className="text-zinc-400 text-sm">AI-Powered Shopify Command Center</p>
+          <p className="text-sm text-zinc-400 leading-relaxed max-w-[320px]">
+            AI-powered intelligence for your Shopify store. Real-time analytics, inventory insights, and generative tools.
+          </p>
         </div>
 
-        {/* Login card */}
-        <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl animate-fade-in-up stagger-2">
+        {/* Login form */}
+        <div className="animate-fade-in-up stagger-2">
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Email</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.15em] font-display">Email</label>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@growthcapital.com"
-                className="h-11 bg-zinc-800/50 border-white/10 focus:border-indigo-500/50 focus:ring-indigo-500/20 placeholder:text-zinc-600"
+                className="h-12 bg-white/[0.04] border-white/[0.08] focus:border-emerald-500/40 focus:ring-emerald-500/15 placeholder:text-zinc-600 rounded-xl text-sm"
                 required
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Password</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.15em] font-display">Password</label>
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="h-11 bg-zinc-800/50 border-white/10 focus:border-indigo-500/50 focus:ring-indigo-500/20 placeholder:text-zinc-600"
+                className="h-12 bg-white/[0.04] border-white/[0.08] focus:border-emerald-500/40 focus:ring-emerald-500/15 placeholder:text-zinc-600 rounded-xl text-sm"
                 required
               />
             </div>
 
             {error && (
-              <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2.5 animate-fade-in">
+              <div className="text-sm text-red-400 bg-red-500/8 border border-red-500/15 rounded-xl px-4 py-3 animate-fade-in">
                 {error}
               </div>
             )}
@@ -102,12 +116,12 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg shadow-indigo-500/25 font-semibold transition-all duration-200 disabled:opacity-50"
+              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 shadow-lg shadow-emerald-500/20 font-display font-semibold tracking-wide transition-all duration-300 disabled:opacity-50 rounded-xl text-[13px]"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
+                  Authenticating...
                 </div>
               ) : (
                 "Sign In"
@@ -115,31 +129,10 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-white/5">
-            <p className="text-xs text-zinc-500 text-center mb-3">Demo Accounts</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => { setEmail("admin@growthcapital.com"); setPassword("growth2026"); }}
-                className="text-xs px-3 py-2.5 rounded-lg border border-white/10 text-zinc-400 hover:text-white hover:border-indigo-500/30 hover:bg-white/5 transition-all text-left"
-              >
-                <span className="block font-medium text-zinc-300">Growth Capital</span>
-                <span className="text-zinc-500">Full access</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail("client@glowpure.com"); setPassword("glowpure2026"); }}
-                className="text-xs px-3 py-2.5 rounded-lg border border-white/10 text-zinc-400 hover:text-white hover:border-indigo-500/30 hover:bg-white/5 transition-all text-left"
-              >
-                <span className="block font-medium text-zinc-300">GlowPure</span>
-                <span className="text-zinc-500">Analytics only</span>
-              </button>
-            </div>
-          </div>
         </div>
 
-        <p className="text-center text-xs text-zinc-600 mt-8 animate-fade-in-up stagger-3">
-          Built by Growth Capital
+        <p className="text-center text-[11px] text-zinc-700 mt-10 animate-fade-in-up stagger-3 tracking-wider font-display">
+          Growth Capital Intelligence Platform
         </p>
       </div>
     </div>
