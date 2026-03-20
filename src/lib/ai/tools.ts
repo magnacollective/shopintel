@@ -115,26 +115,17 @@ export const shopifyTools = {
 
   generateLiquid: tool({
     description:
-      "Generate a premium Shopify Liquid section with live preview. You MUST always provide complete Liquid code via the 'code' parameter. Every generation must be unique.",
+      "Generate a Shopify Liquid section. Put ALL Liquid code in the 'liquidCode' parameter. Do NOT put code in any other field.",
     inputSchema: z.object({
       componentType: z
         .enum(["featured-products", "hero-banner", "product-grid", "newsletter", "testimonials", "custom"])
-        .describe("Section type for preview layout."),
-      description: z
+        .describe("Section type for preview layout"),
+      liquidCode: z
         .string()
-        .optional()
-        .describe("Design details or customization notes"),
-      code: z
-        .string()
-        .max(50000)
-        .describe("REQUIRED. Your complete Liquid section code with {% style %} and {% schema %} blocks."),
-      productCount: z
-        .number()
-        .optional()
-        .describe("Products for preview (default 4)"),
+        .describe("The complete Shopify Liquid section. Must include HTML, a {% style %} block with all CSS, and a {% schema %} block with settings and presets. This is the ONLY field for code."),
     }),
     execute: async (params) => {
-      const products = await getProducts({ limit: params.productCount || 4 });
+      const products = await getProducts({ limit: 4 });
       const previewProducts = products.map((p) => ({
         title: p.title,
         price: p.priceRangeV2.minVariantPrice.amount,
@@ -145,7 +136,7 @@ export const shopifyTools = {
       }));
 
       return {
-        code: params.code,
+        code: params.liquidCode,
         componentType: params.componentType,
         previewProducts,
       };
