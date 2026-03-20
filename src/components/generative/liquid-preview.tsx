@@ -88,7 +88,7 @@ export function LiquidPreview({ code, componentType, previewProducts }: LiquidPr
         </div>
         <div className="flex-1 overflow-auto">
           {tab === "preview" && previewHtml ? (
-            <iframe srcDoc={previewHtml} className="w-full h-full bg-white" style={{ border: "none" }} sandbox="" title="Liquid section preview" />
+            <iframe srcDoc={previewHtml} className="w-full h-full bg-white" style={{ border: "none" }} sandbox="allow-same-origin" title="Liquid section preview" />
           ) : (
             <pre className="bg-zinc-950 text-zinc-100 p-6 overflow-auto text-xs leading-relaxed h-full">
               <code>{code}</code>
@@ -165,7 +165,7 @@ export function LiquidPreview({ code, componentType, previewProducts }: LiquidPr
               srcDoc={previewHtml}
               className="w-full bg-white"
               style={{ height: "600px", border: "none" }}
-              sandbox=""
+              sandbox="allow-same-origin"
               title="Liquid section preview"
             />
           </div>
@@ -196,29 +196,34 @@ function buildPreviewFromCode(code: string, products: PreviewProduct[]): string 
   // Remove {% style %}...{% endstyle %} blocks (we'll inject CSS separately)
   html = html.replace(/\{%[-\s]*style\s*%\}[\s\S]*?\{%[-\s]*endstyle\s*%\}/gi, "");
 
-  // Replace Liquid for-loops with unrolled product data
-  // Handles: {% for product in collection.products %} ... {% endfor %}
-  const forLoopMatch = html.match(/\{%[-\s]*for\s+(\w+)\s+in\s+[\w.]+\s*%\}([\s\S]*?)\{%[-\s]*endfor\s*%\}/i);
-  if (forLoopMatch && products.length > 0) {
-    const itemVar = forLoopMatch[1];
-    const loopBody = forLoopMatch[2];
+  // Replace ALL Liquid for-loops with unrolled product data
+  // Uses a greedy approach to handle nested tags inside loop bodies
+  const forLoopRegex = /\{%[-\s]*for\s+(\w+)\s+in\s+[\w.]+\s*(?:limit:\s*\d+\s*)?%\}([\s\S]*?)\{%[-\s]*endfor\s*%\}/gi;
+  let loopMatch;
+  while ((loopMatch = forLoopRegex.exec(html)) !== null) {
+    if (products.length === 0) break;
+    const itemVar = loopMatch[1];
+    const loopBody = loopMatch[2];
     const unrolled = products.map((p) => {
       let block = loopBody;
-      // Replace product image references
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.featured_image\\s*\\|\\s*img_url[^}]*\\}\\}`, "g"), p.image || "");
+      // Replace product image references (many Liquid patterns)
       block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.featured_image[^}]*\\}\\}`, "g"), p.image || "");
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.images\\[0\\][^}]*\\}\\}`, "g"), p.image || "");
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.media\\[0\\][^}]*\\}\\}`, "g"), p.image || "");
+      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.images\\s*\\[\\s*0\\s*\\][^}]*\\}\\}`, "g"), p.image || "");
+      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.media\\s*\\[\\s*0\\s*\\][^}]*\\}\\}`, "g"), p.image || "");
+      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.image[^}]*\\}\\}`, "g"), p.image || "");
       // Replace product fields
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.title\\s*\\}\\}`, "g"), p.title);
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.vendor\\s*\\}\\}`, "g"), p.vendor);
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.handle\\s*\\}\\}`, "g"), p.handle);
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.price\\s*\\|\\s*money[^}]*\\}\\}`, "g"), formatPrice(p.price, p.currency));
+      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.title\\s*(?:\\|[^}]*)?\\}\\}`, "g"), p.title);
+      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.vendor\\s*(?:\\|[^}]*)?\\}\\}`, "g"), p.vendor);
+      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.handle\\s*(?:\\|[^}]*)?\\}\\}`, "g"), p.handle);
       block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.price[^}]*\\}\\}`, "g"), formatPrice(p.price, p.currency));
-      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.url\\s*\\}\\}`, "g"), `#${p.handle}`);
+      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.url\\s*(?:\\|[^}]*)?\\}\\}`, "g"), `#${p.handle}`);
+      block = block.replace(new RegExp(`\\{\\{\\s*${itemVar}\\.description[^}]*\\}\\}`, "g"), "");
+      // Strip inner conditionals ({% if product.available %} etc.)
+      block = block.replace(/\{%[-\s]*(?:if|elsif|unless|else|endif|endunless)[^%]*%\}/gi, "");
       return block;
     }).join("\n");
-    html = html.replace(forLoopMatch[0], unrolled);
+    html = html.replace(loopMatch[0], unrolled);
+    forLoopRegex.lastIndex = 0; // reset since we mutated html
   }
 
   // Replace section.settings references with reasonable defaults
