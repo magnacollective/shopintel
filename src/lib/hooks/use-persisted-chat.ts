@@ -163,23 +163,31 @@ export function usePersistedChat() {
     setChatKey((k) => k + 1);
   }, [chat, activeConversationId]);
 
+  // Prevent double-click race conditions
+  const sendingRef = useRef(false);
+
   // Wrap sendMessage to auto-create conversation and save user message
   const sendMessage = useCallback(async (opts: { text: string }) => {
-    let convId = activeConversationId;
+    if (sendingRef.current) return;
+    sendingRef.current = true;
 
-    // Auto-create conversation on first message
-    if (!convId) {
-      const title = opts.text.slice(0, 60) + (opts.text.length > 60 ? "..." : "");
-      convId = await createConversation(title);
-      if (!convId) return;
-      setActiveConversationId(convId);
+    try {
+      let convId = activeConversationId;
+
+      // Auto-create conversation on first message
+      if (!convId) {
+        const title = opts.text.slice(0, 60) + (opts.text.length > 60 ? "..." : "");
+        convId = await createConversation(title);
+        if (!convId) return;
+        setActiveConversationId(convId);
+      }
+
+      // Send to AI immediately, persist in background
+      chat.sendMessage(opts);
+      saveMessage(convId, "user", JSON.stringify([{ type: "text", text: opts.text }]));
+    } finally {
+      sendingRef.current = false;
     }
-
-    // Save user message
-    await saveMessage(convId, "user", JSON.stringify([{ type: "text", text: opts.text }]));
-
-    // Send to AI
-    chat.sendMessage(opts);
   }, [activeConversationId, createConversation, chat]);
 
   return {
