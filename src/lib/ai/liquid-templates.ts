@@ -3,72 +3,160 @@ export function generateLiquidCode(componentType: string, description?: string):
     case "featured-products":
       return `{% comment %}
   Featured Products Section
-  ${description || "Displays a curated grid of featured products"}
+  ${description || "Curated product grid — luxury clean beauty aesthetic"}
 {% endcomment %}
 
 <section class="featured-products" data-section-id="{{ section.id }}">
-  <div class="page-width">
-    <h2 class="section-heading">{{ section.settings.heading }}</h2>
+  <div class="featured-products__inner">
+    {% if section.settings.label != blank %}
+      <span class="featured-products__label">{{ section.settings.label }}</span>
+    {% endif %}
+    <h2 class="featured-products__heading">{{ section.settings.heading }}</h2>
     {% if section.settings.subheading != blank %}
-      <p class="section-subheading">{{ section.settings.subheading }}</p>
+      <p class="featured-products__subheading">{{ section.settings.subheading }}</p>
     {% endif %}
 
-    <div class="product-grid" style="
-      display: grid;
-      grid-template-columns: repeat({{ section.settings.columns }}, 1fr);
-      gap: 24px;
-    ">
+    <div class="featured-products__grid">
       {% for product in collections[section.settings.collection].products limit: section.settings.product_count %}
-        <div class="product-card">
-          <a href="{{ product.url }}">
-            <div class="product-card__image">
+        <article class="fp-card">
+          <a href="{{ product.url }}" class="fp-card__link">
+            <div class="fp-card__image-wrap">
               {% if product.featured_image %}
-                {{ product.featured_image | image_url: width: 600 | image_tag:
+                {{ product.featured_image | image_url: width: 640 | image_tag:
                   loading: 'lazy',
-                  class: 'product-card__img'
+                  class: 'fp-card__img'
                 }}
               {% else %}
-                {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+                {{ 'product-1' | placeholder_svg_tag: 'fp-card__placeholder' }}
               {% endif %}
             </div>
-            <div class="product-card__info">
-              <p class="product-card__vendor">{{ product.vendor }}</p>
-              <h3 class="product-card__title">{{ product.title }}</h3>
-              <p class="product-card__price">{{ product.price | money }}</p>
+            <div class="fp-card__meta">
+              <span class="fp-card__vendor">{{ product.vendor }}</span>
+              <h3 class="fp-card__title">{{ product.title }}</h3>
+              <span class="fp-card__price">{{ product.price | money }}</span>
             </div>
           </a>
-          <button class="product-card__atc btn btn--primary"
-            type="button"
-            data-product-id="{{ product.id }}">
-            Add to Cart
+          <button class="fp-card__atc" type="button" data-product-id="{{ product.id }}">
+            Add to Bag
           </button>
-        </div>
+        </article>
       {% endfor %}
     </div>
   </div>
 </section>
 
 {% style %}
-  .featured-products { padding: 60px 0; }
-  .section-heading { font-size: 2rem; text-align: center; margin-bottom: 8px; }
-  .section-subheading { text-align: center; color: #666; margin-bottom: 40px; }
-  .product-card { border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s; }
-  .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-  .product-card__img { width: 100%; aspect-ratio: 1; object-fit: cover; }
-  .product-card__info { padding: 16px; }
-  .product-card__vendor { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; }
-  .product-card__title { font-size: 1rem; font-weight: 600; margin: 4px 0; }
-  .product-card__price { font-size: 1rem; font-weight: 700; color: #111; }
-  .product-card__atc { display: block; width: calc(100% - 32px); margin: 0 16px 16px; padding: 10px; border: none; border-radius: 8px; background: #111; color: #fff; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-  .product-card__atc:hover { background: #333; }
+  .featured-products {
+    --fp-accent: #D33167;
+    --fp-text: #000;
+    --fp-muted: rgba(0,0,0,0.55);
+    --fp-light: rgba(0,0,0,0.25);
+    padding: 96px 0;
+    background: #fff;
+  }
+  .featured-products__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .featured-products__label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--fp-accent);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .featured-products__heading {
+    font-family: 'Founders Grotesk', 'Roboto Condensed', sans-serif;
+    font-size: 2.75rem;
+    font-weight: 700;
+    line-height: 1.05;
+    text-align: center;
+    margin: 0 0 12px;
+    color: var(--fp-text);
+    letter-spacing: -0.01em;
+  }
+  .featured-products__subheading {
+    text-align: center;
+    color: var(--fp-muted);
+    font-size: 1rem;
+    margin: 0 0 56px;
+    font-weight: 400;
+  }
+  .featured-products__grid {
+    display: grid;
+    grid-template-columns: repeat({{ section.settings.columns }}, 1fr);
+    gap: 28px;
+  }
+  .fp-card { position: relative; }
+  .fp-card__link { text-decoration: none; color: inherit; display: block; }
+  .fp-card__image-wrap { overflow: hidden; background: #f5f5f0; margin-bottom: 16px; }
+  .fp-card__img {
+    width: 100%;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+  }
+  .fp-card__link:hover .fp-card__img { transform: scale(1.04); }
+  .fp-card__vendor {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--fp-muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .fp-card__title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--fp-text);
+    line-height: 1.3;
+  }
+  .fp-card__price {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--fp-text);
+  }
+  .fp-card__atc {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--fp-text);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border-bottom: 1px solid var(--fp-text);
+    padding-bottom: 2px;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+  .fp-card__atc:hover {
+    color: var(--fp-accent);
+    border-color: var(--fp-accent);
+  }
+  @media (max-width: 768px) {
+    .featured-products { padding: 64px 0; }
+    .featured-products__heading { font-size: 2rem; }
+    .featured-products__grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  }
 {% endstyle %}
 
 {% schema %}
 {
   "name": "Featured Products",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Featured Products" },
-    { "type": "text", "id": "subheading", "label": "Subheading", "default": "Our most popular picks" },
+    { "type": "text", "id": "label", "label": "Top Label", "default": "Curated for You" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Bestsellers" },
+    { "type": "text", "id": "subheading", "label": "Subheading", "default": "The essentials your routine has been missing" },
     { "type": "collection", "id": "collection", "label": "Collection" },
     { "type": "range", "id": "product_count", "min": 2, "max": 12, "step": 1, "default": 4, "label": "Products to show" },
     { "type": "range", "id": "columns", "min": 2, "max": 4, "step": 1, "default": 4, "label": "Columns" }
@@ -80,37 +168,116 @@ export function generateLiquidCode(componentType: string, description?: string):
     case "hero-banner":
       return `{% comment %}
   Hero Banner Section
-  ${description || "Full-width hero with heading, subtext, and CTA"}
+  ${description || "Full-bleed editorial hero — luxury clean beauty aesthetic"}
 {% endcomment %}
 
-<section class="hero-banner" data-section-id="{{ section.id }}"
-  style="background-image: url('{{ section.settings.background_image | image_url: width: 1920 }}');">
-  <div class="hero-banner__overlay" style="background: rgba(0,0,0,{{ section.settings.overlay_opacity | divided_by: 100.0 }});">
-    <div class="page-width hero-banner__content">
-      {% if section.settings.heading != blank %}
-        <h1 class="hero-banner__heading">{{ section.settings.heading }}</h1>
-      {% endif %}
-      {% if section.settings.subheading != blank %}
-        <p class="hero-banner__subheading">{{ section.settings.subheading }}</p>
-      {% endif %}
-      {% if section.settings.button_text != blank %}
-        <a href="{{ section.settings.button_link }}" class="hero-banner__cta btn btn--primary">
-          {{ section.settings.button_text }}
-        </a>
-      {% endif %}
-    </div>
+<section class="hero-banner" data-section-id="{{ section.id }}">
+  <div class="hero-banner__media">
+    {% if section.settings.background_image %}
+      {{ section.settings.background_image | image_url: width: 1920 | image_tag:
+        loading: 'eager',
+        class: 'hero-banner__img',
+        fetchpriority: 'high'
+      }}
+    {% endif %}
+    <div class="hero-banner__overlay"></div>
+  </div>
+  <div class="hero-banner__content">
+    {% if section.settings.label != blank %}
+      <span class="hero-banner__label">{{ section.settings.label }}</span>
+    {% endif %}
+    <h1 class="hero-banner__heading">{{ section.settings.heading }}</h1>
+    {% if section.settings.subheading != blank %}
+      <p class="hero-banner__subheading">{{ section.settings.subheading }}</p>
+    {% endif %}
+    {% if section.settings.button_text != blank %}
+      <a href="{{ section.settings.button_link }}" class="hero-banner__cta">
+        {{ section.settings.button_text }}
+      </a>
+    {% endif %}
   </div>
 </section>
 
 {% style %}
-  .hero-banner { min-height: 70vh; background-size: cover; background-position: center; display: flex; }
-  .hero-banner__overlay { flex: 1; display: flex; align-items: center; justify-content: center; }
-  .hero-banner__content { text-align: center; max-width: 700px; padding: 40px 20px; }
-  .hero-banner__heading { font-size: 3.5rem; font-weight: 800; color: #fff; line-height: 1.1; margin-bottom: 16px; }
-  .hero-banner__subheading { font-size: 1.25rem; color: rgba(255,255,255,0.85); margin-bottom: 32px; line-height: 1.6; }
-  .hero-banner__cta { display: inline-block; padding: 14px 36px; background: #fff; color: #111; font-weight: 700; text-decoration: none; border-radius: 8px; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s; }
-  .hero-banner__cta:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
-  @media (max-width: 768px) { .hero-banner__heading { font-size: 2rem; } .hero-banner { min-height: 50vh; } }
+  .hero-banner {
+    --hero-accent: #D33167;
+    position: relative;
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #000;
+  }
+  .hero-banner__media {
+    position: absolute;
+    inset: 0;
+  }
+  .hero-banner__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .hero-banner__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,{{ section.settings.overlay_opacity | divided_by: 100.0 }});
+  }
+  .hero-banner__content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 680px;
+    padding: 40px 24px;
+  }
+  .hero-banner__label {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--hero-accent);
+    margin-bottom: 20px;
+  }
+  .hero-banner__heading {
+    font-family: 'Founders Grotesk', 'Roboto Condensed', sans-serif;
+    font-size: 4.5rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 0.95;
+    margin: 0 0 20px;
+    letter-spacing: -0.02em;
+  }
+  .hero-banner__subheading {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.75);
+    margin: 0 0 40px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+  .hero-banner__cta {
+    display: inline-block;
+    padding: 14px 44px;
+    background: #fff;
+    color: #000;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    text-decoration: none;
+    border: none;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  .hero-banner__cta:hover {
+    background: var(--hero-accent);
+    color: #fff;
+  }
+  @media (max-width: 768px) {
+    .hero-banner { min-height: 65vh; }
+    .hero-banner__heading { font-size: 2.5rem; }
+    .hero-banner__subheading { font-size: 1rem; }
+  }
 {% endstyle %}
 
 {% schema %}
@@ -118,11 +285,12 @@ export function generateLiquidCode(componentType: string, description?: string):
   "name": "Hero Banner",
   "settings": [
     { "type": "image_picker", "id": "background_image", "label": "Background Image" },
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Your Skin Deserves the Best" },
-    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Discover our clean, science-backed skincare formulas" },
+    { "type": "text", "id": "label", "label": "Top Label", "default": "New Arrival" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Makeup for\\nSkincare Freaks" },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Clean, clinically-proven formulas that do more for your skin" },
     { "type": "text", "id": "button_text", "label": "Button Text", "default": "Shop Now" },
     { "type": "url", "id": "button_link", "label": "Button Link" },
-    { "type": "range", "id": "overlay_opacity", "min": 0, "max": 90, "step": 5, "default": 40, "label": "Overlay Opacity %" }
+    { "type": "range", "id": "overlay_opacity", "min": 0, "max": 70, "step": 5, "default": 30, "label": "Overlay Opacity %" }
   ],
   "presets": [{ "name": "Hero Banner" }]
 }
@@ -131,39 +299,35 @@ export function generateLiquidCode(componentType: string, description?: string):
     case "product-grid":
       return `{% comment %}
   Product Grid Section
-  ${description || "Responsive product grid with filtering"}
+  ${description || "Responsive product grid — luxury clean beauty aesthetic"}
 {% endcomment %}
 
-<section class="product-grid-section" data-section-id="{{ section.id }}">
-  <div class="page-width">
-    <h2 class="section-heading">{{ section.settings.heading }}</h2>
+<section class="pg-section" data-section-id="{{ section.id }}">
+  <div class="pg-section__inner">
+    <h2 class="pg-section__heading">{{ section.settings.heading }}</h2>
 
-    <div class="product-grid" style="
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 20px;
-    ">
+    <div class="pg-grid">
       {% for product in collections[section.settings.collection].products limit: section.settings.limit %}
-        <article class="grid-product">
-          <a href="{{ product.url }}" class="grid-product__link">
-            <div class="grid-product__image-wrapper">
+        <article class="pg-card">
+          <a href="{{ product.url }}" class="pg-card__link">
+            <div class="pg-card__image-wrap">
               {% if product.featured_image %}
-                {{ product.featured_image | image_url: width: 500 | image_tag:
+                {{ product.featured_image | image_url: width: 560 | image_tag:
                   loading: 'lazy',
-                  class: 'grid-product__image'
+                  class: 'pg-card__image'
                 }}
               {% endif %}
               {% if product.compare_at_price > product.price %}
-                <span class="grid-product__badge">Sale</span>
+                <span class="pg-card__badge">Sale</span>
               {% endif %}
             </div>
-            <div class="grid-product__meta">
-              <span class="grid-product__vendor">{{ product.vendor }}</span>
-              <h3 class="grid-product__title">{{ product.title }}</h3>
-              <div class="grid-product__price">
-                <span>{{ product.price | money }}</span>
+            <div class="pg-card__details">
+              <span class="pg-card__vendor">{{ product.vendor }}</span>
+              <h3 class="pg-card__title">{{ product.title }}</h3>
+              <div class="pg-card__pricing">
+                <span class="pg-card__price">{{ product.price | money }}</span>
                 {% if product.compare_at_price > product.price %}
-                  <s class="grid-product__compare">{{ product.compare_at_price | money }}</s>
+                  <s class="pg-card__compare">{{ product.compare_at_price | money }}</s>
                 {% endif %}
               </div>
             </div>
@@ -175,26 +339,69 @@ export function generateLiquidCode(componentType: string, description?: string):
 </section>
 
 {% style %}
-  .product-grid-section { padding: 60px 0; }
-  .section-heading { font-size: 1.75rem; font-weight: 700; margin-bottom: 32px; }
-  .grid-product { border-radius: 12px; overflow: hidden; background: #fff; border: 1px solid #eee; transition: all 0.2s; }
-  .grid-product:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-color: #ddd; }
-  .grid-product__link { text-decoration: none; color: inherit; }
-  .grid-product__image-wrapper { position: relative; }
-  .grid-product__image { width: 100%; aspect-ratio: 1; object-fit: cover; }
-  .grid-product__badge { position: absolute; top: 12px; left: 12px; background: #ef4444; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
-  .grid-product__meta { padding: 16px; }
-  .grid-product__vendor { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: #999; }
-  .grid-product__title { font-size: 0.95rem; font-weight: 600; margin: 4px 0 8px; }
-  .grid-product__price { font-weight: 700; }
-  .grid-product__compare { color: #999; font-weight: 400; margin-left: 8px; }
+  .pg-section {
+    --pg-accent: #D33167;
+    --pg-text: #000;
+    --pg-muted: rgba(0,0,0,0.55);
+    padding: 88px 0;
+    background: #fff;
+  }
+  .pg-section__inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .pg-section__heading {
+    font-family: 'Founders Grotesk', 'Roboto Condensed', sans-serif;
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin: 0 0 48px;
+    color: var(--pg-text);
+    letter-spacing: -0.01em;
+  }
+  .pg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 28px;
+  }
+  .pg-card__link { text-decoration: none; color: inherit; display: block; }
+  .pg-card__image-wrap { position: relative; overflow: hidden; background: #f5f5f0; margin-bottom: 14px; }
+  .pg-card__image {
+    width: 100%;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+  }
+  .pg-card__link:hover .pg-card__image { transform: scale(1.04); }
+  .pg-card__badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: var(--pg-accent);
+    color: #fff;
+    padding: 4px 12px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .pg-card__vendor {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--pg-muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .pg-card__title { font-size: 0.95rem; font-weight: 500; margin: 0 0 6px; line-height: 1.3; }
+  .pg-card__pricing { display: flex; align-items: center; gap: 8px; }
+  .pg-card__price { font-size: 0.9rem; font-weight: 600; }
+  .pg-card__compare { font-size: 0.85rem; color: var(--pg-muted); font-weight: 400; }
 {% endstyle %}
 
 {% schema %}
 {
   "name": "Product Grid",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "All Products" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Shop All" },
     { "type": "collection", "id": "collection", "label": "Collection" },
     { "type": "range", "id": "limit", "min": 4, "max": 24, "step": 4, "default": 12, "label": "Products to show" }
   ],
@@ -205,44 +412,108 @@ export function generateLiquidCode(componentType: string, description?: string):
     case "newsletter":
       return `{% comment %}
   Newsletter Signup Section
-  ${description || "Email signup with gradient background"}
+  ${description || "Email capture — luxury clean beauty aesthetic"}
 {% endcomment %}
 
-<section class="newsletter-section" data-section-id="{{ section.id }}">
-  <div class="page-width newsletter-content">
-    <h2 class="newsletter-heading">{{ section.settings.heading }}</h2>
-    <p class="newsletter-subheading">{{ section.settings.subheading }}</p>
-    {% form 'customer', class: 'newsletter-form' %}
+<section class="nl-section" data-section-id="{{ section.id }}">
+  <div class="nl-section__inner">
+    {% if section.settings.label != blank %}
+      <span class="nl-section__label">{{ section.settings.label }}</span>
+    {% endif %}
+    <h2 class="nl-section__heading">{{ section.settings.heading }}</h2>
+    <p class="nl-section__body">{{ section.settings.subheading }}</p>
+    {% form 'customer', class: 'nl-form' %}
       <input type="hidden" name="contact[tags]" value="newsletter">
-      <div class="newsletter-input-group">
+      <div class="nl-form__row">
         <input type="email" name="contact[email]" placeholder="{{ section.settings.placeholder }}"
-          class="newsletter-input" required aria-label="Email">
-        <button type="submit" class="newsletter-btn">{{ section.settings.button_text }}</button>
+          class="nl-form__input" required aria-label="Email address">
+        <button type="submit" class="nl-form__btn">{{ section.settings.button_text }}</button>
       </div>
     {% endform %}
   </div>
 </section>
 
 {% style %}
-  .newsletter-section { padding: 80px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-  .newsletter-content { max-width: 560px; margin: 0 auto; text-align: center; }
-  .newsletter-heading { font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
-  .newsletter-subheading { color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 32px; }
-  .newsletter-input-group { display: flex; gap: 8px; }
-  .newsletter-input { flex: 1; padding: 14px 18px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 1rem; backdrop-filter: blur(10px); }
-  .newsletter-input::placeholder { color: rgba(255,255,255,0.6); }
-  .newsletter-input:focus { outline: none; border-color: #fff; background: rgba(255,255,255,0.2); }
-  .newsletter-btn { padding: 14px 28px; background: #fff; color: #764ba2; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; font-size: 1rem; white-space: nowrap; transition: transform 0.2s; }
-  .newsletter-btn:hover { transform: scale(1.02); }
-  @media (max-width: 640px) { .newsletter-input-group { flex-direction: column; } }
+  .nl-section {
+    --nl-accent: #D33167;
+    padding: 100px 0;
+    background: #000;
+    color: #fff;
+  }
+  .nl-section__inner {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 0 24px;
+    text-align: center;
+  }
+  .nl-section__label {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--nl-accent);
+    margin-bottom: 16px;
+  }
+  .nl-section__heading {
+    font-family: 'Founders Grotesk', 'Roboto Condensed', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.05;
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+  .nl-section__body {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.6);
+    margin: 0 0 40px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+  .nl-form__row { display: flex; gap: 0; }
+  .nl-form__input {
+    flex: 1;
+    padding: 14px 18px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: transparent;
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  .nl-form__input::placeholder { color: rgba(255,255,255,0.35); }
+  .nl-form__input:focus { border-color: var(--nl-accent); }
+  .nl-form__btn {
+    padding: 14px 32px;
+    background: #fff;
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  .nl-form__btn:hover {
+    background: var(--nl-accent);
+    color: #fff;
+  }
+  @media (max-width: 640px) {
+    .nl-section { padding: 72px 0; }
+    .nl-section__heading { font-size: 1.75rem; }
+    .nl-form__row { flex-direction: column; gap: 12px; }
+  }
 {% endstyle %}
 
 {% schema %}
 {
   "name": "Newsletter",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Join the Glow Club" },
-    { "type": "text", "id": "subheading", "label": "Subheading", "default": "Get 15% off your first order plus skincare tips" },
+    { "type": "text", "id": "label", "label": "Top Label", "default": "Stay in the Know" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Join the Inner Circle" },
+    { "type": "text", "id": "subheading", "label": "Subheading", "default": "First access to new drops, exclusive offers, and clean beauty intel" },
     { "type": "text", "id": "placeholder", "label": "Input Placeholder", "default": "Enter your email" },
     { "type": "text", "id": "button_text", "label": "Button Text", "default": "Subscribe" }
   ],
@@ -253,49 +524,110 @@ export function generateLiquidCode(componentType: string, description?: string):
     case "testimonials":
       return `{% comment %}
   Testimonials Section
-  ${description || "Customer testimonials carousel"}
+  ${description || "Customer reviews — luxury clean beauty aesthetic"}
 {% endcomment %}
 
-<section class="testimonials-section" data-section-id="{{ section.id }}">
-  <div class="page-width">
-    <h2 class="testimonials-heading">{{ section.settings.heading }}</h2>
-    <div class="testimonials-grid">
+<section class="tst-section" data-section-id="{{ section.id }}">
+  <div class="tst-section__inner">
+    {% if section.settings.label != blank %}
+      <span class="tst-section__label">{{ section.settings.label }}</span>
+    {% endif %}
+    <h2 class="tst-section__heading">{{ section.settings.heading }}</h2>
+
+    <div class="tst-grid">
       {% for block in section.blocks %}
-        <div class="testimonial-card" {{ block.shopify_attributes }}>
-          <div class="testimonial-stars">
+        <blockquote class="tst-card" {{ block.shopify_attributes }}>
+          <div class="tst-card__stars">
             {% for i in (1..block.settings.rating) %}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#D33167"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             {% endfor %}
           </div>
-          <p class="testimonial-text">"{{ block.settings.text }}"</p>
-          <div class="testimonial-author">
-            <strong>{{ block.settings.author }}</strong>
+          <p class="tst-card__quote">{{ block.settings.text }}</p>
+          <footer class="tst-card__footer">
+            <cite class="tst-card__author">{{ block.settings.author }}</cite>
             {% if block.settings.verified %}
-              <span class="testimonial-verified">Verified Buyer</span>
+              <span class="tst-card__verified">Verified</span>
             {% endif %}
-          </div>
-        </div>
+          </footer>
+        </blockquote>
       {% endfor %}
     </div>
   </div>
 </section>
 
 {% style %}
-  .testimonials-section { padding: 60px 0; }
-  .testimonials-heading { font-size: 2rem; font-weight: 700; text-align: center; margin-bottom: 40px; }
-  .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-  .testimonial-card { background: #fafafa; border-radius: 16px; padding: 28px; border: 1px solid #eee; }
-  .testimonial-stars { display: flex; gap: 2px; margin-bottom: 16px; }
-  .testimonial-text { font-size: 1rem; line-height: 1.7; color: #333; margin-bottom: 16px; }
-  .testimonial-author strong { font-size: 0.9rem; }
-  .testimonial-verified { font-size: 0.75rem; color: #16a34a; margin-left: 8px; background: #f0fdf4; padding: 2px 8px; border-radius: 4px; }
+  .tst-section {
+    --tst-accent: #D33167;
+    --tst-text: #000;
+    --tst-muted: rgba(0,0,0,0.55);
+    padding: 96px 0;
+    background: #FAFAF7;
+  }
+  .tst-section__inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .tst-section__label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--tst-accent);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .tst-section__heading {
+    font-family: 'Founders Grotesk', 'Roboto Condensed', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 0 0 56px;
+    color: var(--tst-text);
+    letter-spacing: -0.01em;
+  }
+  .tst-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 32px;
+  }
+  .tst-card {
+    margin: 0;
+    padding: 36px;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.06);
+    position: relative;
+  }
+  .tst-card__stars { display: flex; gap: 3px; margin-bottom: 20px; }
+  .tst-card__quote {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--tst-text);
+    margin: 0 0 24px;
+    font-weight: 400;
+    font-style: italic;
+  }
+  .tst-card__footer { display: flex; align-items: center; gap: 10px; }
+  .tst-card__author {
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--tst-text);
+  }
+  .tst-card__verified {
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--tst-accent);
+  }
 {% endstyle %}
 
 {% schema %}
 {
   "name": "Testimonials",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "What Our Customers Say" }
+    { "type": "text", "id": "label", "label": "Top Label", "default": "Reviews" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "In Their Words" }
   ],
   "blocks": [
     {
@@ -312,9 +644,9 @@ export function generateLiquidCode(componentType: string, description?: string):
   "presets": [{
     "name": "Testimonials",
     "blocks": [
-      { "type": "testimonial", "settings": { "text": "This serum transformed my skin in just two weeks!", "author": "Sarah M.", "rating": 5, "verified": true } },
-      { "type": "testimonial", "settings": { "text": "Best moisturizer I've ever used. My skin feels amazing.", "author": "Jessica L.", "rating": 5, "verified": true } },
-      { "type": "testimonial", "settings": { "text": "Clean ingredients and it actually works. Will repurchase!", "author": "Emily R.", "rating": 4, "verified": true } }
+      { "type": "testimonial", "settings": { "text": "This serum transformed my skin in just two weeks. The glow is unreal.", "author": "Sarah M.", "rating": 5, "verified": true } },
+      { "type": "testimonial", "settings": { "text": "Finally a foundation that actually improves my skin over time. Obsessed.", "author": "Jessica L.", "rating": 5, "verified": true } },
+      { "type": "testimonial", "settings": { "text": "Clean ingredients that deliver. My skin has never felt this good.", "author": "Emily R.", "rating": 5, "verified": true } }
     ]
   }]
 }
@@ -323,17 +655,42 @@ export function generateLiquidCode(componentType: string, description?: string):
     default:
       return `{% comment %}
   Custom Section
-  ${description || "Custom Shopify section"}
+  ${description || "Custom Shopify section — luxury clean beauty aesthetic"}
 {% endcomment %}
 
 <section class="custom-section" data-section-id="{{ section.id }}">
-  <div class="page-width">
-    <h2>{{ section.settings.heading }}</h2>
-    <div class="custom-content">
+  <div class="custom-section__inner">
+    <h2 class="custom-section__heading">{{ section.settings.heading }}</h2>
+    <div class="custom-section__content rte">
       {{ section.settings.content }}
     </div>
   </div>
 </section>
+
+{% style %}
+  .custom-section {
+    padding: 88px 0;
+    background: #fff;
+  }
+  .custom-section__inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .custom-section__heading {
+    font-family: 'Founders Grotesk', 'Roboto Condensed', sans-serif;
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin: 0 0 32px;
+    color: #000;
+    letter-spacing: -0.01em;
+  }
+  .custom-section__content {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: rgba(0,0,0,0.7);
+  }
+{% endstyle %}
 
 {% schema %}
 {

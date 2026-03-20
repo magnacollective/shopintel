@@ -101,7 +101,7 @@ export const shopifyTools = {
 
   generateLiquid: tool({
     description:
-      "Generate a Shopify Liquid section with live preview. Use this when the user asks to create a section, page, component, or any storefront element. Fetches real product data to power the preview.",
+      "Generate a premium Shopify Liquid section with live preview. Creates production-grade storefront code with a luxury clean beauty aesthetic (Kosas-inspired: Founders Grotesk typography, black/white palette, dusty rose #D33167 accent, refined minimalism). Use this when the user asks to create a section, page, component, or any storefront element.",
     inputSchema: z.object({
       componentType: z
         .enum(["featured-products", "hero-banner", "product-grid", "newsletter", "testimonials", "custom"])
@@ -109,7 +109,7 @@ export const shopifyTools = {
       description: z
         .string()
         .optional()
-        .describe("Additional details about what the component should look like"),
+        .describe("Additional design details or customization for the component"),
       productCount: z
         .number()
         .optional()
